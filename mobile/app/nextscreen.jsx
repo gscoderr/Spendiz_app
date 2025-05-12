@@ -21,3 +21,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+// https://www.fast2sms.com/dev/bulkV2?authorization=w37M0BZS2x9ozTdUHDgfYq6AGjrEe54Wh1uQIkmpt8bCOKLRvPTN4XYR76P8AGpQOiVyWtzMgnd02Zqu&route=dlt&sender_id=&message=&variables_values=&flash=0&numbers=&schedule_time=
