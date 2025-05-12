@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { Image } from 'react-native';
 
 export default function Welcome() {
   const [phone, setPhone] = useState('');
@@ -16,20 +18,29 @@ export default function Welcome() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-      <View style={styles.box}>
-        <Text style={styles.label}>Enter Your Phone Number</Text>
+      <Animated.View entering={FadeIn.duration(800)} style={styles.box}>
+        <Image
+          source={require('../assets/images/wallet-icon.png')} // 👈 update with your actual path
+          style={styles.icon}
+          resizeMode="contain"
+        />
+        <Text style={styles.heading}>Welcome to Spendiz</Text>
+        <Text style={styles.tagline}>Manage your credit cards & offers smartly</Text>
+
         <TextInput
           style={styles.input}
-          placeholder="Phone Number"
+          placeholder="Enter Phone Number"
+          placeholderTextColor="#fff"
           keyboardType="numeric"
           value={phone}
           onChangeText={setPhone}
           maxLength={10}
         />
+
         <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
@@ -37,33 +48,48 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0D0D2B',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
   box: {
-    width: '80%',
+    width: '100%',
     alignItems: 'center',
   },
-  label: {
-    fontSize: 18,
-    marginBottom: 10,
-    fontWeight: '600',
+  icon: {
+    width: 200,
+    height: 200,
+    // marginBottom: 10,
+  },
+  heading: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  tagline: {
+    fontSize: 16,
+    color: '#ccc',
+    marginBottom: 30,
+    textAlign: 'center'
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: '#ffffff40',
+    backgroundColor: '#ffffff10',
+    borderRadius: 10,
+    padding: 14,
     width: '100%',
     fontSize: 16,
+    color: '#fff',
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#3D5CFF',
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 10,
     width: '100%',
   },
   buttonText: {
