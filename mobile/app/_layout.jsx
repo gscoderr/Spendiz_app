@@ -22,10 +22,14 @@ export default function Layout() {
     );
   }
 
-    return (
-    <Stack initialRouteName="welcome" />
+  return (
+    <Stack
+      initialRouteName="welcome"
+      screenOptions={{
+        headerShown: false, // 👈 THIS LINE HIDES THE TOP HEADER
+      }}
+    />
   );
-
 }
 
 const styles = StyleSheet.create({
