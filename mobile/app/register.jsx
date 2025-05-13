@@ -3,63 +3,120 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   Alert,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import axios from 'axios';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const { phone } = useLocalSearchParams();
+export default function ProfileAdd() {
   const router = useRouter();
+  const { phone } = useLocalSearchParams();
 
-  const handleSave = async () => {
-    if (!name || !email) {
-      Alert.alert('Missing Fields', 'Please enter both name and email.');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  const handleNext = () => {
+    if (!firstName || !lastName) {
+      Alert.alert('Missing Info', 'Please enter your first and last name');
       return;
     }
 
-    try {
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/register`, {
-        phone,
-        name,
-        email,
-      });
+    // You can POST this data to backend here
+    // axios.post('/auth/save-profile', { phone, firstName, middleName, lastName })
 
-      if (res.data.success) {
-        Alert.alert('Success', 'Profile saved successfully');
-        router.push('/dashboard'); // change route if needed
-      } else {
-        Alert.alert('Failed', res.data.message || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('Register Error:', error?.response?.data || error.message);
-      Alert.alert('Error', 'Something went wrong during registration');
-    }
+    router.replace('/dashboard');
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Enter Your Name</Text>
-      <TextInput value={name} onChangeText={setName} style={styles.input} />
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.stepText}>STEP 1/3</Text>
+        <Text style={styles.title}>Enter your full name</Text>
+        <Text style={styles.subtitle}>
+          Your name lets us welcome you with a unique experience
+        </Text>
+      </View>
 
-      <Text style={styles.label}>Enter Your Email</Text>
-      <TextInput value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Middle name (optional)"
+          value={middleName}
+          onChangeText={setMiddleName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+      </View>
 
-      <TouchableOpacity onPress={handleSave} style={styles.button}>
-        <Text style={styles.buttonText}>Save</Text>
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+        <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  label: { fontSize: 18, marginBottom: 10 },
-  input: { borderWidth: 1, padding: 12, borderRadius: 8, marginBottom: 15 },
-  button: { backgroundColor: '#000', padding: 15, borderRadius: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontSize: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 24,
+    justifyContent: 'space-between',
+  },
+  header: {
+    marginTop: 50,
+  },
+  stepText: {
+    color: 'green',
+    fontWeight: '600',
+    textAlign: 'right',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  form: {
+    marginTop: 30,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#999',
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  button: {
+    backgroundColor: '#ccc',
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#000',
+    fontWeight: '600',
+  },
 });

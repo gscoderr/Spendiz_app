@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -8,7 +7,7 @@ import {
   Alert,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform,
+  Platform,Image,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -38,7 +37,7 @@ export default function Verify() {
         if (res.data.exists) {
           router.push('/dashboard');
         } else {
-          router.push({ pathname: '/profile-add', params: { phone } });
+          router.push({ pathname: '/register', params: { phone } });
         }
       } else {
         Alert.alert('Invalid OTP', res.data.message || 'Please try again');
@@ -54,6 +53,7 @@ export default function Verify() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.box}>
+        <Image source={require('../assets/images/otp-graphic.png')} style={styles.image} />
         <Text style={styles.title}>Enter OTP sent to +91 {phone}</Text>
         <TextInput
           style={styles.input}
@@ -62,6 +62,7 @@ export default function Verify() {
           keyboardType="number-pad"
           maxLength={6}
           placeholder="Enter 6-digit OTP"
+          placeholderTextColor="#fff"
         />
         <View style={styles.button}>
           {loading ? (
@@ -81,17 +82,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#0D0D2B',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
   },
   box: {
     width: '100%',
     alignItems: 'center',
+    
   },
   title: {
     fontSize: 20,
     color: '#fff',
     marginBottom: 20,
     textAlign: 'center',
+  },
+   image: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
+    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
