@@ -1,81 +1,68 @@
-// import { supabase } from '../db/db.js';
-// import User from '../models/user.model.js';
+// controllers/auth.controller.js
 
-// export const verifyOtp = async (req, res) => {
-//   const { phone, otp } = req.body;
-
-//   try {
-//     const fullPhone = '+91' + phone;
-
-//     // Step 1: Verify OTP with Supabase
-//     const { error } = await supabase.auth.verifyOtp({
-//       phone: fullPhone,
-//       token: otp,
-//       type: 'sms',
-//     });
-
-//     if (error) {
-//       return res.status(400).json({ success: false, message: 'Invalid OTP' });
-//     }
-
-//     // Step 2: Check if user exists in DB
-//     const existingUser = await User.findOne({ phone });
-
-//     // Step 3: Return response
-//     return res.json({
-//       success: true,
-//       exists: !!existingUser,
-//     });
-
-//   } catch (err) {
-//     console.error('OTP verify error:', err.message);
-//     res.status(500).json({ success: false, message: 'Server error' });
-//   }
-// };
 import { supabase } from '../db/db.js';
 import User from '../models/user.model.js';
+import ApiError from '../utils/ApiError.js';
+import ApiResponse from '../utils/ApiResponse.js';
+import asyncHandler from '../utils/AsyncHandler.js';
 
-export const sendOtp = async (req, res) => {
+// ✅ Send OTP
+export const sendOtp = asyncHandler(async(req, res) => {
   const { phone } = req.body;
 
   if (!phone) {
-    return res.status(400).json({ success: false, message: 'Phone number is required' });
+    throw new ApiError(400, "Phone number is required");
   }
 
-  try {
-    const fullPhone = '+91' + phone;
-    const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
+  const fullPhone = '+91' + phone;
+  const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
 
-    if (error) {
-      console.error('Supabase send OTP error:', error.message);
-      return res.status(400).json({ success: false, message: error.message });
-    }
-
-    return res.json({ success: true, message: 'OTP sent successfully' });
-
-  } catch (err) {
-    console.error('Unhandled Error:', err.message);
-    return res.status(500).json({ success: false, message: 'Server error' });
+  if (error) {
+    throw new ApiError(400, `Supabase Error: ${error.message}`);
   }
-};
 
-export const verifyOtp = async (req, res) => {
+  return res.status(200).json(
+    new ApiResponse(200, null, "OTP sent successfully")
+  );
+});
+
+// ✅ Verify OTP
+export const verifyOtp = asyncHandler(async (req, res) => {
   const { phone, otp } = req.body;
 
-  try {
-    const fullPhone = '+91' + phone;
-    const { error } = await supabase.auth.verifyOtp({
-      phone: fullPhone,
-      token: otp,
-      type: 'sms',
-    });
-
-    if (error) return res.status(400).json({ success: false, message: 'Invalid OTP' });
-
-    const existingUser = await User.findOne({ phone });
-    return res.json({ success: true, exists: !!existingUser });
-
-  } catch (err) {
-    return res.status(500).json({ success: false, message: 'Server error' });
+  if (!phone || !otp) {
+    throw new ApiError(400, "Phone and OTP are required");
   }
-};
+
+  const fullPhone = '+91' + phone;
+  const { error } = await supabase.auth.verifyOtp({
+    phone: fullPhone,
+    token: otp,
+    type: 'sms',
+  });
+
+  if (error) {
+    throw new ApiError(400, "Invalid OTP");
+  }
+
+  const existingUser = await User.findOne({ phone });
+  return res.status(200).json(
+    new ApiResponse(200, { exists: !!existingUser }, "OTP verified successfully")
+  );
+});
+
+// ✅ Check if user exists (optional endpoint)
+export const checkUser = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone) {
+    throw new ApiError(400, "Phone number is required");
+  }
+
+  const user = await User.findOne({ phone: '+91' + phone });
+  const exists = !!user;
+
+  return res.status(200).json(
+    new ApiResponse(200, { exists }, exists ? "User exists" : "User not found")
+  );
+});
