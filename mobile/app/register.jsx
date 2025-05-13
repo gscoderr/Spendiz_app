@@ -72,7 +72,7 @@ export default function ProfileAdd() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0D0D2B',
     padding: 24,
     justifyContent: 'space-between',
   },
