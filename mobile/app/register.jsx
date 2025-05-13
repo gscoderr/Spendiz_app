@@ -10,6 +10,12 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import axios from 'axios';
+
+
+
+
+
 
 export default function ProfileAdd() {
   const router = useRouter();
@@ -18,18 +24,37 @@ export default function ProfileAdd() {
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
 
-  const handleNext = () => {
+
+  const handleNext = async () => {
     if (!firstName || !lastName) {
       Alert.alert('Missing Info', 'Please enter your first and last name');
       return;
     }
 
-    // You can POST this data to backend here
-    // axios.post('/auth/save-profile', { phone, firstName, middleName, lastName })
+    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    const normalizedPhone = phone?.startsWith('+91') ? phone : `+91${phone}`;
 
-    router.replace('/dashboard');
+    console.log("Registering user with phone:", normalizedPhone);
+
+    try {
+      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/register`, {
+        phone: normalizedPhone,
+        name: fullName,
+        email: email,
+      });
+
+      if (res.data.success) {
+        Alert.alert('Success', res.data.message || 'Profile saved successfully');
+        router.replace('/dashboard');
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || 'Registration failed';
+      Alert.alert('Error', message);
+    }
   };
+
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -50,15 +75,18 @@ export default function ProfileAdd() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Middle name (optional)"
-          value={middleName}
-          onChangeText={setMiddleName}
-        />
-        <TextInput
-          style={styles.input}
           placeholder="Last Name"
           value={lastName}
           onChangeText={setLastName}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email Address"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 

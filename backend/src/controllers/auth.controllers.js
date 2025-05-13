@@ -5,6 +5,7 @@ import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/AsyncHandler.js';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 // ✅ Send OTP
 export const sendOtp = asyncHandler(async(req, res) => {
@@ -66,3 +67,36 @@ export const checkUser = asyncHandler(async (req, res) => {
     new ApiResponse(200, { exists }, exists ? "User exists" : "User not found")
   );
 });
+
+// Register User after OTP
+export const registerUser = asyncHandler(async (req, res) => {
+  const { phone, name, email } = req.body;
+console.log("PHONE RECEIVED FROM FRONTEND:", req.body.phone);
+
+  if (!phone || !name) {
+    throw new ApiError(400, "Phone and name are required");
+  }
+
+   if (!isValidPhoneNumber(phone)) {
+    throw new ApiError(400, "Phone number is not valid");
+  }
+
+
+  const existingUser = await User.findOne({ phone });
+  if (existingUser) {
+    throw new ApiError(409, "User already exists");
+  }
+
+  const user = await User.create({
+    phone: '+91' + phone,
+    name,
+    email,
+    otpVerified: true,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, user, "User registered successfully"));
+});
+
+
