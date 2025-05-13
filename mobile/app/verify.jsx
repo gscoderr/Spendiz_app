@@ -35,9 +35,12 @@ export default function Verify() {
 
       if (res.data.success) {
         if (res.data.exists) {
-          router.push('/dashboard');
+          // router.push('/dashboard');
+          router.push('/register');
         } else {
-          router.push({ pathname: '/register', params: { phone } });
+          // router.push({ pathname: '/register', params: { phone } });
+          router.push({ pathname: '/dashboard',params: {phone} });
+         
         }
       } else {
         Alert.alert('Invalid OTP', res.data.message || 'Please try again');
@@ -116,5 +119,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 10,
     overflow: 'hidden',
+    
   },
 });
