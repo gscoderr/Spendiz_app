@@ -1,21 +1,24 @@
 // controllers/auth.controller.js
 
-import { supabase } from '../db/db.js';
-import User from '../models/user.model.js';
-import ApiError from '../utils/ApiError.js';
-import ApiResponse from '../utils/ApiResponse.js';
-import asyncHandler from '../utils/AsyncHandler.js';
-import { isValidPhoneNumber } from 'libphonenumber-js';
+import { supabase } from "../db/db.js";
+import  User  from "../models/user.model.js";
+import  ApiError  from "../utils/ApiError.js";
+import  ApiResponse  from "../utils/ApiResponse.js";
+import  asyncHandler  from "../utils/AsyncHandler.js";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
-// ✅ Send OTP
-export const sendOtp = asyncHandler(async(req, res) => {
+// ==============================================================================
+// @desc    Send OTP to user's phone number
+// @route   POST /api/v1/auth/send-otp
+// ==============================================================================
+export const sendOtp = asyncHandler(async (req, res) => {
   const { phone } = req.body;
 
   if (!phone) {
     throw new ApiError(400, "Phone number is required");
   }
 
-  const fullPhone = '+91' + phone;
+  const fullPhone = "+91" + phone;
   const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
 
   if (error) {
@@ -27,7 +30,10 @@ export const sendOtp = asyncHandler(async(req, res) => {
   );
 });
 
-// ✅ Verify OTP
+// ==============================================================================
+// @desc    Verify OTP
+// @route   POST /api/v1/auth/verify-otp
+// ==============================================================================
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { phone, otp } = req.body;
 
@@ -35,11 +41,11 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone and OTP are required");
   }
 
-  const fullPhone = '+91' + phone;
+  const fullPhone = "+91" + phone;
   const { error } = await supabase.auth.verifyOtp({
     phone: fullPhone,
     token: otp,
-    type: 'sms',
+    type: "sms",
   });
 
   if (error) {
@@ -52,7 +58,10 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   );
 });
 
-// ✅ Check if user exists (optional endpoint)
+// ==============================================================================
+// @desc    Check if user exists by phone number
+// @route   POST /api/v1/auth/check-user
+// ==============================================================================
 export const checkUser = asyncHandler(async (req, res) => {
   const { phone } = req.body;
 
@@ -60,7 +69,7 @@ export const checkUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number is required");
   }
 
-  const user = await User.findOne({ phone: '+91' + phone });
+  const user = await User.findOne({ phone: "+91" + phone });
   const exists = !!user;
 
   return res.status(200).json(
@@ -68,19 +77,21 @@ export const checkUser = asyncHandler(async (req, res) => {
   );
 });
 
-// Register User after OTP
+// ==============================================================================
+// @desc    Register user after OTP verification
+// @route   POST /api/v1/auth/register
+// ==============================================================================
 export const registerUser = asyncHandler(async (req, res) => {
   const { phone, name, email } = req.body;
-console.log("PHONE RECEIVED FROM FRONTEND:", req.body.phone);
+  console.log("PHONE RECEIVED FROM FRONTEND:", phone);
 
   if (!phone || !name) {
     throw new ApiError(400, "Phone and name are required");
   }
 
-   if (!isValidPhoneNumber(phone)) {
+  if (!isValidPhoneNumber(phone)) {
     throw new ApiError(400, "Phone number is not valid");
   }
-
 
   const existingUser = await User.findOne({ phone });
   if (existingUser) {
@@ -88,15 +99,13 @@ console.log("PHONE RECEIVED FROM FRONTEND:", req.body.phone);
   }
 
   const user = await User.create({
-    phone: '+91' + phone,
+    phone: "+91" + phone,
     name,
     email,
     otpVerified: true,
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, user, "User registered successfully"));
+  return res.status(201).json(
+    new ApiResponse(201, user, "User registered successfully")
+  );
 });
-
-

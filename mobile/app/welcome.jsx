@@ -32,9 +32,10 @@ export default function Welcome() {
         phone,
       });
 
+      
+
       if (response.data.success) {
-        // router.push({ pathname: '/verify', params: { phone } });
-        router.push({ pathname: '/register' , params: { phone } });
+        router.push({ pathname: '/verify', params: { phone } });        // router.push({ pathname: '/register' , params: { phone } });
       } else {
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
