@@ -1,26 +1,23 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
-
-// const supabaseUrl = process.env.SUPABASE_URL;
-// const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-// export const supabase = createClient(supabaseUrl, supabaseKey);
-
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
+import { DB_NAME } from "../constants.js";
 
 dotenv.config();
 
 export const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URI, {
-           
-        });
-        console.log('MongoDB connected  ', conn.connection.host);
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1);
-    }
-}
+  try {
+    const connectionInstance = await mongoose.connect(
+      `${process.env.MONGO_URI}/${DB_NAME}`
+    );
+    console.log(
+      `\nMongoDB connected!! DB HOST: ${connectionInstance.connection.host}`
+    );
+  } catch (error) {
+    console.error("MONGODB connection FAILED ", error);
+    process.exit(1);
+  }
+};
 
 export const supabase = createClient(
   process.env.SUPABASE_URL,

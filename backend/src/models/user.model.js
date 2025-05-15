@@ -1,5 +1,5 @@
-
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,9 +7,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-
     },
-
     otpVerified: {
       type: Boolean,
       default: false,
@@ -19,24 +17,53 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     email: {
-  type: String,
-  required: [true, "Email is required"],  // ✅ required
-  unique: true,                           
-  trim: true,
-  lowercase: true,
-  match: [
-    /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
-    "Please enter a valid email address"
-  ],                                     
-},
-
-
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match: [
+        /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+        "Please enter a valid email address",
+      ],
+    },
+    refreshToken: {
+      type: String,
+    },
   },
   {
-    timestamps: true, // ✅ adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-const User = mongoose.model('User', userSchema);
-export default User;
+// ✅ Generate Access Token
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      phone: this.phone,
+      name: this.name,
+      email: this.email,
+      otpVerified: this.otpVerified,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
 
+// ✅ Generate Refresh Token
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
+};
+
+export const User = mongoose.model("User", userSchema);
