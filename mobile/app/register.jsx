@@ -59,7 +59,7 @@ export default function ProfileAdd() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.stepText}>STEP 1/3</Text>
+        {/* <Text style={styles.stepText}>STEP 1/3</Text> */}
         <Text style={styles.title}>Enter your full name</Text>
         <Text style={styles.subtitle}>
           Your name lets us welcome you with a unique experience
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0D0D2B',
     padding: 24,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   header: {
     marginTop: 50,
@@ -116,12 +116,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#000',
+    color: '#ffff',
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#ffff',
   },
   form: {
     marginTop: 30,

@@ -8,16 +8,24 @@ import {
   ScrollView,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Dashboard() {
+  const navigation = useNavigation();
+  const userName = 'Gog';
+  const avatarInitials =
+    userName.length === 1
+      ? userName[0].toUpperCase()
+      : (userName[0] + userName[userName.length - 1]).toUpperCase();
+
   return (
     <View style={styles.container}>
       {/* Top Greeting & Refer */}
       <View style={styles.topBar}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>GG</Text>
+          <Text style={styles.avatarText}>{avatarInitials}</Text>
         </View>
-        <Text style={styles.greeting}>Hi Gog</Text>
+        <Text style={styles.greeting}>Hi {userName}</Text>
         <TouchableOpacity style={styles.referBtn}>
           <Text style={styles.referText}>Refer</Text>
         </TouchableOpacity>
@@ -40,14 +48,17 @@ export default function Dashboard() {
           <Text style={styles.subText}>Fetch your reward points</Text>
           <TouchableOpacity style={styles.gmailButton}>
             <Text style={styles.gmailText}>Connect Gmail</Text>
-            <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png' }} style={styles.gmailIcon} />
+            <Image
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png' }}
+              style={styles.gmailIcon}
+            />
           </TouchableOpacity>
         </View>
 
         {/* Your Cards */}
         <View style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Your Cards</Text>
-          <TouchableOpacity style={styles.addCard}>
+          <TouchableOpacity style={styles.addCard} onPress={() => navigation.navigate('AddCard')}>
             <Text style={styles.addIcon}>＋</Text>
             <Text style={styles.addText}>Add your cards to view rewards & offers</Text>
           </TouchableOpacity>
@@ -69,16 +80,25 @@ export default function Dashboard() {
 
       {/* Bottom Tab Bar */}
       <View style={styles.tabBar}>
-        <Text style={styles.tabActive}>Home</Text>
-        <Text style={styles.tab}>Credit</Text>
-        <Text style={styles.tab}>Loyalty</Text>
-        <Text style={styles.tab}>Consult</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
+          <Text style={styles.tabActive}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Credit')}>
+          <Text style={styles.tab}>Credit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Loyalty')}>
+          <Text style={styles.tab}>Loyalty</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Consult')}>
+          <Text style={styles.tab}>Consult</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // same styles as previous message
   container: { flex: 1, backgroundColor: '#0D0D2B' },
   topBar: {
     flexDirection: 'row',
@@ -170,6 +190,7 @@ const styles = StyleSheet.create({
   addText: {
     color: '#fff',
     fontSize: 14,
+    textAlign: 'center',
   },
 
   spendBox: {

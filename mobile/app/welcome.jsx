@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: 'bold',
     color: '#ffffff',
-    // marginBottom: 8,
+    marginLeft: -20,
   },
   tagline: {
     fontSize: 16,
