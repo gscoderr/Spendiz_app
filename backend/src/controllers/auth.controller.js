@@ -1,11 +1,26 @@
 // controllers/auth.controller.js
 
 import { supabase } from "../db/db.js";
-import  User  from "../models/user.model.js";
-import  ApiError  from "../utils/ApiError.js";
-import  ApiResponse  from "../utils/ApiResponse.js";
-import  asyncHandler  from "../utils/AsyncHandler.js";
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import jwt from "jsonwebtoken";
+
+// ==========================================================
+// ✅ Helper: Generate Access + Refresh Token for a user
+// ==========================================================
+const generateAccessAndRefreshTokens = async (userId) => {
+  const user = await User.findById(userId);
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  return { accessToken, refreshToken };
+};
 
 // ==============================================================================
 // @desc    Send OTP to user's phone number
@@ -31,7 +46,7 @@ export const sendOtp = asyncHandler(async (req, res) => {
 });
 
 // ==============================================================================
-// @desc    Verify OTP
+// @desc    Verify OTP (real or mock in dev), issue JWTs
 // @route   POST /api/v1/auth/verify-otp
 // ==============================================================================
 export const verifyOtp = asyncHandler(async (req, res) => {
@@ -42,6 +57,37 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   const fullPhone = "+91" + phone;
+
+  // ✅ MOCK ONLY: Skip OTP verification in development mode
+  if (process.env.NODE_ENV === "development") {
+    console.log("✅ Dev mode: Bypassing OTP verification");
+
+    const user = await User.findOne({ phone: fullPhone });
+
+    if (!user) {
+      return res.status(200).json(
+        new ApiResponse(200, { exists: false }, "Dev OTP verified — user not registered")
+      );
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+    const options = { httpOnly: true, secure: false }; // Set secure: true in production
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(200, {
+          user,
+          accessToken,
+          refreshToken,
+          redirectTo: "/dashboard"
+        }, "Dev login success (OTP bypassed)")
+      );
+  }
+
+  // ✅ REAL OTP Verification using Supabase (prod or staging)
   const { error } = await supabase.auth.verifyOtp({
     phone: fullPhone,
     token: otp,
@@ -52,11 +98,31 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid OTP");
   }
 
-  const existingUser = await User.findOne({ phone });
-  return res.status(200).json(
-    new ApiResponse(200, { exists: !!existingUser }, "OTP verified successfully")
-  );
+  const user = await User.findOne({ phone: fullPhone });
+
+  if (!user) {
+    return res.status(200).json(
+      new ApiResponse(200, { exists: false }, "OTP verified — user not registered")
+    );
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+  const options = { httpOnly: true, secure: true };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(200, {
+        user,
+        accessToken,
+        refreshToken,
+        redirectTo: "/dashboard"
+      }, "OTP verified & user logged in")
+    );
 });
+
 
 // ==============================================================================
 // @desc    Check if user exists by phone number
@@ -93,13 +159,15 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number is not valid");
   }
 
-  const existingUser = await User.findOne({ phone });
+  const fullPhone = "+91" + phone;
+
+  const existingUser = await User.findOne({ phone: fullPhone });
   if (existingUser) {
     throw new ApiError(409, "User already exists");
   }
 
   const user = await User.create({
-    phone: "+91" + phone,
+    phone: fullPhone,
     name,
     email,
     otpVerified: true,
