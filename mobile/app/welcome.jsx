@@ -14,9 +14,11 @@ import {
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import axios from 'axios';
+import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
+
 
 export default function Welcome() {
-  const [phone, setPhone] = useState('');
+ const {phone, setPhone} = useUser();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 

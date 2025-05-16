@@ -95,7 +95,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
             user,
             accessToken,
             refreshToken,
-            redirectTo: "/dashboard"
+            // redirectTo: "/dashboard"
           }, "Dev login success (OTP bypassed)")
         );
     }
@@ -131,7 +131,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
           user,
           accessToken,
           refreshToken,
-          redirectTo: "/dashboard"
+          // redirectTo: "/dashboard"
         }, "OTP verified & user logged in")
       );
   }
@@ -173,7 +173,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number is not valid");
   }
 
-  const fullPhone = "+91" + phone;
+  const fullPhone =phone?.startsWith('+91') ? phone : `+91${phone}`;
 
   const existingUser = await User.findOne({ phone: fullPhone });
   if (existingUser) {
@@ -186,6 +186,9 @@ export const registerUser = asyncHandler(async (req, res) => {
     email,
     otpVerified: true,
   });
+  
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
 
   return res.status(201).json(
     new ApiResponse(201, user, "User registered successfully")
