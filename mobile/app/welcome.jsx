@@ -14,9 +14,11 @@ import {
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import axios from 'axios';
+import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
+
 
 export default function Welcome() {
-  const [phone, setPhone] = useState('');
+ const {phone, setPhone} = useUser();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -28,6 +30,7 @@ export default function Welcome() {
 
     try {
       setLoading(true);
+      Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
       const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/send-otp`, {
         phone,
       });
@@ -35,12 +38,14 @@ export default function Welcome() {
       
 
       if (response.data.success) {
-        // router.push({ pathname: '/verify', params: { phone } }); 
-        router.push({ pathname: '/register' , params: { phone } });
+        Alert.alert('Success', response.data.message || 'OTP sent successfully');
+        router.push({ pathname: '/verify', params: { phone } });        // router.push({ pathname: '/register' , params: { phone } });
       } else {
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
+      // This is deleted in the original code
+      router.push({ pathname: '/verify', params: { phone } });
       console.error('OTP Send Error:', error?.response?.data || error.message);
       Alert.alert('Error', 'Something went wrong while sending OTP');
     } finally {

@@ -7,24 +7,25 @@ import {
   Alert,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform,Image,
+  Platform, Image,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import axios from 'axios';
+import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
 export default function Verify() {
-  const { phone } = useLocalSearchParams();
+
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { phone, setPhone, setUser, setToken } = useUser(); // Destructure setUser and setToken from the context
 
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
       Alert.alert('Invalid OTP', 'Please enter a valid 6-digit OTP');
       return;
     }
-
     try {
       setLoading(true);
 
@@ -33,21 +34,34 @@ export default function Verify() {
         otp,
       });
 
+      // console.log('OTP Verify Request:');
+      // // console.log("response",res.data.data);
+      // console.log('OTP Verify Response:', res.data.data.exists);
+
+      // console.log('OTP Verify Response:', res.data);
+
       if (res.data.success) {
-        if (res.data.exists) {
+        if (res.data.data?.user) {
+          // Existing user
+          setUser(res.data.data.user);
+          setToken(res.data.data.accessToken);
           router.push('/dashboard');
-          // router.push('/register');
+        } else if (res.data.data?.exists === false) {
+          // New user
+          setPhone(phone);
+          Alert.alert("Info", res.data.message || "Redirecting to registration");
+          router.push('/register');
         } else {
-          router.push({ pathname: '/register', params: { phone } });
-          // router.push({ pathname: '/dashboard',params: {phone} }); 
-         
+          Alert.alert("Error", "Unexpected response from server.");
         }
-      } else {
-        Alert.alert('Invalid OTP', res.data.message || 'Please try again');
       }
+
     } catch (err) {
-      console.error('OTP Verify Error:', err?.response?.data || err.message);
-      Alert.alert('Error', 'Something went wrong while verifying OTP');
+
+      const backendError = err.response?.data?.message || err.message || 'Verification failed';
+      console.error('OTP Verify Error:', backendError);
+      Alert.alert('Verification Error', backendError);
+
     } finally {
       setLoading(false);
     }
@@ -90,7 +104,7 @@ const styles = StyleSheet.create({
   box: {
     width: '100%',
     alignItems: 'center',
-    
+
   },
   title: {
     fontSize: 20,
@@ -98,7 +112,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-   image: {
+  image: {
     width: 150,
     height: 150,
     resizeMode: 'contain',
@@ -119,6 +133,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 10,
     overflow: 'hidden',
-    
+
   },
 });

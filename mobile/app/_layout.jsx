@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import {UserProvider} from '../context/user.context.js'; 
 
 export default function Layout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,12 +24,12 @@ export default function Layout() {
   }
 
   return (
-    <Stack
-      initialRouteName="welcome"
-      screenOptions={{
-        headerShown: false, // 👈 THIS LINE HIDES THE TOP HEADER
-      }}
-    />
+    <UserProvider>
+      <Stack
+        initialRouteName="welcome"
+        screenOptions={{ headerShown: false }}
+      />
+    </UserProvider>
   );
 }
 

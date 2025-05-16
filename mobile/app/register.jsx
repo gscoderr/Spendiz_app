@@ -9,17 +9,14 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import axios from 'axios';
-
-
-
-
-
+import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
 export default function ProfileAdd() {
   const router = useRouter();
-  const { phone } = useLocalSearchParams();
+  const { user, setUser, phone } = useUser();
+
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -27,12 +24,18 @@ export default function ProfileAdd() {
   const [email, setEmail] = useState('');
 
 
+
   const handleNext = async () => {
-    if (!firstName || !lastName) {
-      Alert.alert('Missing Info', 'Please enter your first and last name');
+    if (!firstName || !lastName || !email) {
+      Alert.alert('Missing Info', 'All fields are required');
       return;
     }
 
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    if (!email || !emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     const normalizedPhone = phone?.startsWith('+91') ? phone : `+91${phone}`;
 
@@ -46,12 +49,15 @@ export default function ProfileAdd() {
       });
 
       if (res.data.success) {
+        console.log('Registration Response:', res.data);
+        setUser(res.data.data);
         Alert.alert('Success', res.data.message || 'Profile saved successfully');
         router.replace('/dashboard');
       }
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
-      Alert.alert('Error', message);
+      const backendError = err.response?.data?.message || err.message || 'Verification failed';
+      console.error('OTP Verify Error:', err.response);
+      Alert.alert('Verification Error', backendError);
     }
   };
 
