@@ -58,7 +58,7 @@ export default function Dashboard() {
         {/* Your Cards */}
         <View style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Your Cards</Text>
-          <TouchableOpacity style={styles.addCard} onPress={() => navigation.navigate('AddCard')}>
+          <TouchableOpacity style={styles.addCard} onPress={() => navigation.navigate('addcard')}>
             <Text style={styles.addIcon}>＋</Text>
             <Text style={styles.addText}>Add your cards to view rewards & offers</Text>
           </TouchableOpacity>
