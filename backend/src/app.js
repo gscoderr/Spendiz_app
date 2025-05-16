@@ -12,12 +12,12 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-import cardRoutes from './routes/card.routes.js';
-import authRouter from "./routes/auth.routes.js";
+import cardRouter from './routes/card.route.js';
+import authRouter from "./routes/auth.route.js";
 
 // Route declarations
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/card",cardRoutes);
+app.use("/api/v1/card",cardRouter);
 
 
 export { app };
