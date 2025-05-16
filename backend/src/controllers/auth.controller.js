@@ -22,6 +22,44 @@ const generateAccessAndRefreshTokens = async (userId) => {
   return { accessToken, refreshToken };
 };
 
+
+// ==========================================================
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    throw new ApiError(400, "Refresh token is required");
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decoded._id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new ApiError(403, "Invalid or expired refresh token");
+    }
+
+    const newAccessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    user.refreshToken = newRefreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(
+      new ApiResponse(200, {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        user,
+      }, "Token refreshed")
+    );
+  } catch (err) {
+    throw new ApiError(401, "Refresh token expired or invalid");
+  }
+});
+
+
+
+
 // ==============================================================================
 // @desc    Send OTP to user's phone number
 // @route   POST /api/v1/auth/send-otp
