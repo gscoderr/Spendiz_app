@@ -41,6 +41,7 @@ export default function Welcome() {
         Alert.alert('Success', response.data.message || 'OTP sent successfully');
          router.push('/verify');      // router.push({ pathname: '/register' , params: { phone } });
       } else {
+         
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
