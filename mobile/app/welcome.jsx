@@ -31,7 +31,7 @@ export default function Welcome() {
     try {
       setLoading(true);
       Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
-      const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/send-otp`, {
+      const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/send-otp`, {
         phone,
       });
 

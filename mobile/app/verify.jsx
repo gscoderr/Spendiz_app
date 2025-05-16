@@ -29,7 +29,7 @@ export default function Verify() {
     try {
       setLoading(true);
 
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/verify-otp`, {
+      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/verify-otp`, {
         phone,
         otp,
       });

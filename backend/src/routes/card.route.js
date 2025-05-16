@@ -1,5 +1,5 @@
 import express from 'express';
-import MasterCard from '../models/mastercard.model.js';
+// import MasterCard from '../models/mastercard.model.js';
 
 const router = express.Router();
 

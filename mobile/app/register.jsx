@@ -42,7 +42,7 @@ export default function ProfileAdd() {
     console.log("Registering user with phone:", normalizedPhone);
 
     try {
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/register`, {
+      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/register`, {
         phone: normalizedPhone,
         name: fullName,
         email: email,

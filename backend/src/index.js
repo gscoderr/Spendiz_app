@@ -15,9 +15,6 @@ app.use(cors());
 app.use(express.json()); // ✅ MUST come BEFORE routes
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Then mount routes
-app.use("/auth", routes);
-
 
 
 app.listen(PORT, () => {
