@@ -18,7 +18,7 @@ import { useUser } from '../context/user.context.js'; // Adjust the import path 
 
 
 export default function Welcome() {
- const {phone, setPhone} = useUser();
+  const { phone, setPhone } = useUser();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -30,26 +30,36 @@ export default function Welcome() {
 
     try {
       setLoading(true);
-      Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
+      // Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
       const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/send-otp`, {
         phone,
       });
 
-      
+
 
       if (response.data.success) {
         Alert.alert('Success', response.data.message || 'OTP sent successfully');
-         router.push('/verify');     
+        router.push('/verify');
       } else {
-         
+
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
-      // This is deleted in the original code
-     
-      console.error('OTP Send Error:', error?.response?.data || error.message);
-      Alert.alert('Error', 'Something went wrong while sending OTP');
-    } finally {
+      console.error("OTP Send Error:", error?.response?.data || error.message);
+
+      let backendMessage = "Something went wrong while sending OTP";
+
+      const raw = error?.response?.data;
+
+      // ✅ Check if it's a Supabase error with invalid number
+      if (typeof raw === "string" && raw.includes("Supabase Error") && raw.includes("not a valid phone number")) {
+        backendMessage = "Please enter a valid phone number.";
+      }
+
+      Alert.alert("Error", backendMessage);
+    }
+
+    finally {
       setLoading(false);
     }
   };
@@ -116,7 +126,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     // marginBottom: 8,
   },
-  subding:{
+  subding: {
     fontSize: 25,
     fontWeight: 'bold',
     color: '#ffffff',
