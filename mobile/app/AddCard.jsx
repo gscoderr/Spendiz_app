@@ -1,206 +1,219 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
-import axios from 'axios';
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, Alert, ScrollView
+} from "react-native";
+import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
+import SelectBankModal from "./select_bank";
+import DropDownPicker from "react-native-dropdown-picker";
 
-export default function AddCard() {
-  const [banks, setBanks] = useState([]);
-  const [cards, setCards] = useState([]);
-  const [selectedBank, setSelectedBank] = useState('');
-  const [selectedCard, setSelectedCard] = useState('');
-  const [network, setNetwork] = useState('');
-  const [tier, setTier] = useState('');
-  const [last4, setLast4] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function AddCard({ navigation }) {
+  const [bank, setBank] = useState("");
+  const [cardName, setCardName] = useState(null);
+  const [network, setNetwork] = useState("");
+  const [tier, setTier] = useState("");
+  const [last4Digits, setLast4Digits] = useState("");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [showBankModal, setShowBankModal] = useState(false);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const [allBanks, setAllBanks] = useState([]);
+  const [cardNameOptions, setCardNameOptions] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Fetch distinct banks
+  const popularBanks = ["HDFC", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"];
+
+  // 🔁 Fetch all banks
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const res = await axios.get(`${API_URL}/mastercards/banks`);
-        setBanks(res.data);
-      } catch (error) {
-        console.error('Error fetching banks:', error.message);
+        const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/cards/bank`);
+        setAllBanks(res.data);
+      } catch (err) {
+        Alert.alert("Error", "Failed to fetch banks");
       }
     };
     fetchBanks();
   }, []);
 
-  // Fetch cards when bank is selected
+  // 🔁 Fetch card names when bank is selected
   useEffect(() => {
-    const fetchCards = async () => {
-      if (!selectedBank) return;
+  const fetchCardNames = async () => {
+    if (bank) {
       try {
-        const res = await axios.get(`${API_URL}/mastercards/cards?bank=${selectedBank}`);
-        setCards(res.data);
-      } catch (error) {
-        console.error('Error fetching cards:', error.message);
+        const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/cards/card-names`, {
+          params: { bank }
+        });
+        // 🔁 FIX: Convert string array into dropdown items
+        const items = res.data.map((card) => ({
+          label: card, // What you see
+          value: card  // What gets saved
+        }));
+        setCardNameOptions(items);
+      } catch (err) {
+        Alert.alert("Error", "Failed to fetch card names");
       }
-    };
-    fetchCards();
-  }, [selectedBank]);
+    } else {
+      setCardNameOptions([]);
+    }
+  };
+  fetchCardNames();
+}, [bank]);
 
-  // Auto-fill Network and Tier
+  // 🔁 Fetch card details on selection
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (!selectedBank || !selectedCard) return;
-      try {
-        const res = await axios.get(
-          `${API_URL}/mastercards/details?bank=${selectedBank}&cardName=${selectedCard}`
-        );
-        setNetwork(res.data.network || '');
-        setTier(res.data.tier || '');
-      } catch (error) {
-        console.error('Error fetching card details:', error.message);
+    const fetchCardDetails = async () => {
+      if (bank && cardName) {
+        try {
+          const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/cards/card-details`, {
+            params: { bank, cardName }
+          });
+          setNetwork(res.data.network || "");
+          setTier(res.data.tier || "");
+        } catch (err) {
+          Alert.alert("Error", "Failed to fetch card details");
+        }
       }
     };
-    fetchDetails();
-  }, [selectedCard]);
+    fetchCardDetails();
+  }, [cardName]);
 
   const handleSave = async () => {
-    if (!selectedBank || !selectedCard || !last4) {
-      alert('Please fill all required fields.');
-      return;
+    if (!bank || !cardName || !network || !tier || !last4Digits || !cardHolderName) {
+      return Alert.alert("Please fill all fields");
     }
 
-    setLoading(true);
     try {
-      const payload = {
-        bank: selectedBank,
-        cardName: selectedCard,
+      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/cards/add`, {
+        bank,
+        cardName,
         network,
         tier,
-        last4,
-      };
+        last4Digits,
+        cardHolderName,
+      });
 
-      const res = await axios.post(`${API_URL}/usercards/add`, payload);
-      alert(res.data.message || 'Card added successfully!');
-      setSelectedBank('');
-      setSelectedCard('');
-      setNetwork('');
-      setTier('');
-      setLast4('');
-    } catch (error) {
-      alert('Error saving card');
-      console.error(error.message);
-    } finally {
-      setLoading(false);
+      if (res.data.success) {
+        Alert.alert("Success", "Card added successfully");
+        setBank(""); setCardName(null); setNetwork(""); setTier("");
+        setCardHolderName(""); setLast4Digits("");
+      } else {
+        Alert.alert("Error", res.data.message || "Failed to add card");
+      }
+    } catch (err) {
+      Alert.alert("Error", "Failed to save card");
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Add New Credit Card</Text>
-
-      {/* Bank Dropdown */}
-      <Text style={styles.label}>Bank Name</Text>
-      <View style={styles.dropdown}>
-        {banks.map((bank) => (
-          <TouchableOpacity key={bank} onPress={() => setSelectedBank(bank)}>
-            <Text style={selectedBank === bank ? styles.selectedItem : styles.item}>{bank}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Card Dropdown */}
-      {selectedBank ? (
-        <>
-          <Text style={styles.label}>Card Name</Text>
-          <View style={styles.dropdown}>
-            {cards.map((card) => (
-              <TouchableOpacity key={card} onPress={() => setSelectedCard(card)}>
-                <Text style={selectedCard === card ? styles.selectedItem : styles.item}>{card}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </>
-      ) : null}
-
-      {/* Auto-filled Fields */}
-      {selectedCard ? (
-        <>
-          <Text style={styles.label}>Network</Text>
-          <TextInput style={styles.input} value={network} editable={false} />
-
-          <Text style={styles.label}>Tier</Text>
-          <TextInput style={styles.input} value={tier} editable={false} />
-
-          <Text style={styles.label}>Last 4 Digits</Text>
-          <TextInput
-            style={styles.input}
-            value={last4}
-            onChangeText={setLast4}
-            placeholder="1234"
-            keyboardType="numeric"
-            maxLength={4}
-          />
-        </>
-      ) : null}
-
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save Card</Text>}
+      {/* 🔙 Back Icon */}
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <Ionicons name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
+
+      <Text style={styles.label}>Select Bank</Text>
+      <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
+        <Text>{bank || "Tap to select your bank"}</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.label}>Select Card Name</Text>
+      <DropDownPicker
+        open={dropdownOpen}
+        value={cardName}
+        items={cardNameOptions}
+        setOpen={setDropdownOpen}
+        setValue={setCardName}
+        setItems={setCardNameOptions}
+        searchable={true}
+        placeholder="Select card name"
+        style={styles.dropdownPicker}
+        dropDownContainerStyle={{ borderColor: '#ccc' }}
+        zIndex={5000}
+        zIndexInverse={1000}
+      />
+
+      <TextInput
+        placeholder="Network"
+        value={network}
+        editable={false}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Tier"
+        value={tier}
+        editable={false}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Card Holder Name"
+        value={cardHolderName}
+        onChangeText={setCardHolderName}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Last 4 Digits"
+        value={last4Digits}
+        onChangeText={setLast4Digits}
+        maxLength={4}
+        keyboardType="numeric"
+        style={styles.input}
+      />
+
+      <TouchableOpacity onPress={handleSave} style={styles.button}>
+        <Text style={styles.buttonText}>Save Card</Text>
+      </TouchableOpacity>
+
+      <SelectBankModal
+        visible={showBankModal}
+        onClose={() => setShowBankModal(false)}
+        onSelect={(selectedBank) => {
+          setBank(selectedBank);
+          setCardName(null);
+          setNetwork("");
+          setTier("");
+          setShowBankModal(false);
+        }}
+        otherBanks={allBanks.filter((b) => !popularBanks.includes(b))}
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#f8f9ff',
-    flexGrow: 1,
+  container: { padding: 16, backgroundColor: "#f9f9f9" },
+  backBtn: { marginBottom: 16, alignSelf: "flex-start" },
+  label: { fontWeight: "bold", marginTop: 10, marginBottom: 5 },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  label: {
-    fontWeight: '600',
-    marginTop: 10,
+  dropdownPicker: {
+    borderColor: "#ccc",
+    marginBottom: 10,
+    zIndex: 5000,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 6,
     borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  dropdown: {
-    backgroundColor: '#fff',
+    borderColor: "#ccc",
+    padding: 10,
     borderRadius: 8,
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    marginBottom: 10,
+    backgroundColor: "#fff",
   },
-  item: {
-    padding: 10,
-    color: '#333',
+  button: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
   },
-  selectedItem: {
-    padding: 10,
-    color: '#3D5CFF',
-    fontWeight: '600',
-  },
-  saveBtn: {
-    backgroundColor: '#3D5CFF',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  saveText: {
-    color: '#fff',
-    fontWeight: '700',
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });

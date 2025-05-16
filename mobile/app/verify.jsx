@@ -35,11 +35,11 @@ export default function Verify() {
 
       if (res.data.success) {
         if (res.data.exists) {
-          // router.push('/dashboard');
-          router.push('/register');
+          router.push('/dashboard');
+          // router.push('/register');
         } else {
-          // router.push({ pathname: '/register', params: { phone } });
-          router.push({ pathname: '/dashboard',params: {phone} });
+          router.push({ pathname: '/register', params: { phone } });
+          // router.push({ pathname: '/dashboard',params: {phone} }); 
          
         }
       } else {
