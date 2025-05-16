@@ -39,7 +39,7 @@ export default function Welcome() {
 
       if (response.data.success) {
         Alert.alert('Success', response.data.message || 'OTP sent successfully');
-         router.push('/verify');      // router.push({ pathname: '/register' , params: { phone } });
+         router.push('/verify');     
       } else {
          
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
