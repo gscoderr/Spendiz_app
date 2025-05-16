@@ -34,8 +34,9 @@ export const sendOtp = asyncHandler(async (req, res) => {
   }
 
   const fullPhone = "+91" + phone;
-  const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
 
+  const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
+  console.log("PHONE RECEIVED FROM FRONTEND:", fullPhone);
   if (error) {
     throw new ApiError(400, `Supabase Error: ${error.message}`);
   }
@@ -55,23 +56,71 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   if (!phone || !otp) {
     throw new ApiError(400, "Phone and OTP are required");
   }
+  const fullPhone = phone?.startsWith('+91') ? phone : `+91${phone}`;
 
-  const fullPhone = "+91" + phone;
+  console.log("PHONE RECEIVED FROM FRONTEND:", fullPhone);
 
-  // ✅ MOCK ONLY: Skip OTP verification in development mode
-  if (process.env.NODE_ENV === "development") {
-    console.log("✅ Dev mode: Bypassing OTP verification");
+  console.log("OTP RECEIVED FROM FRONTEND:", otp);
+  console.log(isValidPhoneNumber(fullPhone), "PHONE VALIDATION");
+
+
+  // if (!isValidPhoneNumber(fullPhone)) {
+  if (isValidPhoneNumber(fullPhone)) {
+    // ✅ MOCK ONLY: Skip OTP verification in development mode
+    if (process.env.NODE_ENV === "development") {
+      // if (true) {
+      console.log("✅ Dev mode: Bypassing OTP verification");
+
+      const user = await User.findOne({ phone: fullPhone });
+
+      console.log("USER FOUND:", user);
+
+      if (!user) {
+        console.log("INSIDE !user BLOCK — sending exists: false");
+        return res.status(200).json(
+          new ApiResponse(200, { exists: false }, "Dev OTP verified — user not registered")
+        );
+      }
+
+
+      const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+      const options = { httpOnly: true, secure: false }; // Set secure: true in production
+
+      return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+          new ApiResponse(200, {
+            user,
+            accessToken,
+            refreshToken,
+            redirectTo: "/dashboard"
+          }, "Dev login success (OTP bypassed)")
+        );
+    }
+
+    // ✅ REAL OTP Verification using Supabase (prod or staging)
+    const { error } = await supabase.auth.verifyOtp({
+      phone: fullPhone,
+      token: otp,
+      type: "sms",
+    });
+
+    if (error) {
+      throw new ApiError(400, "Invalid OTP");
+    }
 
     const user = await User.findOne({ phone: fullPhone });
 
     if (!user) {
       return res.status(200).json(
-        new ApiResponse(200, { exists: false }, "Dev OTP verified — user not registered")
+        new ApiResponse(200, { exists: false }, "OTP verified — user not registered")
       );
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
-    const options = { httpOnly: true, secure: false }; // Set secure: true in production
+    const options = { httpOnly: true, secure: true };
 
     return res
       .status(200)
@@ -83,44 +132,9 @@ export const verifyOtp = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
           redirectTo: "/dashboard"
-        }, "Dev login success (OTP bypassed)")
+        }, "OTP verified & user logged in")
       );
   }
-
-  // ✅ REAL OTP Verification using Supabase (prod or staging)
-  const { error } = await supabase.auth.verifyOtp({
-    phone: fullPhone,
-    token: otp,
-    type: "sms",
-  });
-
-  if (error) {
-    throw new ApiError(400, "Invalid OTP");
-  }
-
-  const user = await User.findOne({ phone: fullPhone });
-
-  if (!user) {
-    return res.status(200).json(
-      new ApiResponse(200, { exists: false }, "OTP verified — user not registered")
-    );
-  }
-
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
-  const options = { httpOnly: true, secure: true };
-
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-      new ApiResponse(200, {
-        user,
-        accessToken,
-        refreshToken,
-        redirectTo: "/dashboard"
-      }, "OTP verified & user logged in")
-    );
 });
 
 

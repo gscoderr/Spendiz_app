@@ -28,6 +28,7 @@ export default function Welcome() {
 
     try {
       setLoading(true);
+      Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
       const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/send-otp`, {
         phone,
       });
@@ -35,11 +36,14 @@ export default function Welcome() {
       
 
       if (response.data.success) {
+        Alert.alert('Success', response.data.message || 'OTP sent successfully');
         router.push({ pathname: '/verify', params: { phone } });        // router.push({ pathname: '/register' , params: { phone } });
       } else {
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
+      // This is deleted in the original code
+      router.push({ pathname: '/verify', params: { phone } });
       console.error('OTP Send Error:', error?.response?.data || error.message);
       Alert.alert('Error', 'Something went wrong while sending OTP');
     } finally {

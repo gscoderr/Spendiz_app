@@ -24,22 +24,23 @@ export default function Verify() {
       Alert.alert('Invalid OTP', 'Please enter a valid 6-digit OTP');
       return;
     }
-
     try {
       setLoading(true);
-
+      
       const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/verify-otp`, {
         phone,
         otp,
       });
+     
+      
+      console.log('OTP Verify Response:', res.data.data.exists);
 
       if (res.data.success) {
-        if (res.data.exists) {
-          // router.push('/dashboard');
-          router.push('/register');
-        } else {
-          // router.push({ pathname: '/register', params: { phone } });
+        if (res.data.data.exists) {
+
           router.push({ pathname: '/dashboard',params: {phone} });
+        } else {
+          router.push({ pathname: '/register', params: { phone } });
          
         }
       } else {
