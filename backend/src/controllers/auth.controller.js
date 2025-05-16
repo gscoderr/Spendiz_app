@@ -173,24 +173,42 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number is not valid");
   }
 
-  const fullPhone =phone?.startsWith('+91') ? phone : `+91${phone}`;
+  const fullPhone = phone?.startsWith('+91') ? phone : `+91${phone}`;
 
   const existingUser = await User.findOne({ phone: fullPhone });
   if (existingUser) {
     throw new ApiError(409, "User already exists");
   }
+  try {
+    const user = await User.create({
+      phone: fullPhone,
+      name,
+      email,
+      otpVerified: true,
+    });
 
-  const user = await User.create({
-    phone: fullPhone,
-    name,
-    email,
-    otpVerified: true,
-  });
-  
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
 
-  return res.status(201).json(
-    new ApiResponse(201, user, "User registered successfully")
-  );
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(201).json(
+      new ApiResponse(201, {
+        user,
+        accessToken,
+        refreshToken,
+      }, "User registered successfully")
+    );
+  } catch (err) {
+    console.error("❌ Register error:", err);
+
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(e => e.message);
+      throw new ApiError(400, messages.join(', '));
+    }
+
+    throw new ApiError(500, "Something went wrong during registration");
+  }
 });

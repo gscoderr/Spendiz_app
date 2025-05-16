@@ -39,13 +39,13 @@ export default function Welcome() {
 
       if (response.data.success) {
         Alert.alert('Success', response.data.message || 'OTP sent successfully');
-        router.push({ pathname: '/verify', params: { phone } });        // router.push({ pathname: '/register' , params: { phone } });
+         router.push('/verify');      // router.push({ pathname: '/register' , params: { phone } });
       } else {
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
       // This is deleted in the original code
-      router.push({ pathname: '/verify', params: { phone } });
+     
       console.error('OTP Send Error:', error?.response?.data || error.message);
       Alert.alert('Error', 'Something went wrong while sending OTP');
     } finally {
