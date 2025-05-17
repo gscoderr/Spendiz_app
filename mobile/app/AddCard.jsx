@@ -18,6 +18,7 @@ export default function AddCard({ navigation }) {
   const [cardHolderName, setCardHolderName] = useState("");
   const [showBankModal, setShowBankModal] = useState(false);
 
+  
   const [allBanks, setAllBanks] = useState([]);
   const [cardNameOptions, setCardNameOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
