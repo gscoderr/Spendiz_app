@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {jwtDecode} from 'jwt-decode';
 import axios from 'axios';
+import api from '../utils/axiosInstance';
 
 const UserContext = createContext();
 
@@ -37,7 +38,7 @@ export const UserProvider = ({ children }) => {
           } else {
             console.log('🔁 Access token expired. Attempting refresh...');
 
-            const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/refresh-token`, {
+            const res = await api.post(`/auth/refresh-token`, {
               refreshToken: storedRefresh,
             });
 

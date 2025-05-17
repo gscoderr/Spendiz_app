@@ -49,7 +49,7 @@ api.interceptors.response.use(
 
                 // 🔁 Set new token in header and retry request
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-                return api(originalRequest);
+                return axios(originalRequest);
             } catch (refreshErr) {
                 console.error('🔒 Refresh failed:', refreshErr?.response?.data || refreshErr);
                 await AsyncStorage.multiRemove([
