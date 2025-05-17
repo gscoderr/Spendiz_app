@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
+import api from '../utils/axiosInstance.js'
 import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
 export default function ProfileAdd() {
@@ -43,7 +43,7 @@ export default function ProfileAdd() {
     console.log("Registering user with phone:", normalizedPhone);
 
     try {
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/register`, {
+      const res = await api.post(`/auth/register`, {
         phone: normalizedPhone,
         name: fullName,
         email: email,

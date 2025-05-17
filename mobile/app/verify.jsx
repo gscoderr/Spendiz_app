@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
+import api from '../utils/axiosInstance'
 import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
 export default function Verify() {
@@ -29,16 +29,10 @@ export default function Verify() {
     try {
       setLoading(true);
 
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/verify-otp`, {
+      const res = await api.post(`/auth/verify-otp`, {
         phone,
         otp,
       });
-
-      // console.log('OTP Verify Request:');
-      // // console.log("response",res.data.data);
-      // console.log('OTP Verify Response:', res.data.data.exists);
-
-      // console.log('OTP Verify Response:', res.data);
 
       if (res.data.success) {
         const data = res.data.data;

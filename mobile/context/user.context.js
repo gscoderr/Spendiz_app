@@ -1,7 +1,7 @@
-// user.context.jsx
+// 📁 File: mobile/context/user.context.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import axios from 'axios';
 
 const UserContext = createContext();
@@ -11,28 +11,32 @@ export const UserProvider = ({ children }) => {
   const [token, setTokenState] = useState(null);
   const [phone, setPhone] = useState('');
 
-  // ✅ Load stored credentials and refresh if needed
+  // ✅ Check and restore tokens on load
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem('spendiz_user');
-        const storedToken = await AsyncStorage.getItem('spendiz_token');
-        const storedRefresh = await AsyncStorage.getItem('spendiz_refresh_token');
+      console.log('📦 Checking stored tokens...');
 
-        console.log("🔄 Checking stored tokens...");
-        console.log("🧠 storedUser:", storedUser);
-        console.log("🧠 storedToken:", storedToken);
-        console.log("🧠 storedRefresh:", storedRefresh);
+      const storedUser = await AsyncStorage.getItem('spendiz_user');
+      const storedToken = await AsyncStorage.getItem('spendiz_token');
+      const storedRefresh = await AsyncStorage.getItem('spendiz_refresh_token');
 
+      console.log('🔍 storedUser:', storedUser);
+      console.log('🔍 storedToken:', storedToken);
+      console.log('🔍 storedRefresh:', storedRefresh);
 
-        if (storedUser && storedToken && storedRefresh) {
+      if (storedUser && storedToken && storedRefresh) {
+        try {
           const decoded = jwtDecode(storedToken);
           const isExpired = decoded.exp * 1000 < Date.now();
 
           if (!isExpired) {
+            console.log('✅ Access token valid. Restoring user...');
             setUserState(JSON.parse(storedUser));
             setTokenState(storedToken);
+            return;
           } else {
+            console.log('🔁 Access token expired. Attempting refresh...');
+
             const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/refresh-token`, {
               refreshToken: storedRefresh,
             });
@@ -45,35 +49,37 @@ export const UserProvider = ({ children }) => {
 
             setUserState(user);
             setTokenState(accessToken);
+
+            console.log('✅ Token refresh successful.');
+            return;
           }
+        } catch (err) {
+          console.error('❌ Auth initialization error:', err?.response?.data || err.message);
+          Alert.alert('Session Expired', ' Please log in again.');
+          await logout();
         }
-      } catch (err) {
-        console.error('🔁 Auth initialization error:', err.message);
-        await logout();
+      } else {
+        console.log('🚫 No tokens found. Skipping auth restore.');
       }
     };
 
     initializeAuth();
   }, []);
 
-  // ✅ Save user to state and AsyncStorage
   const setUser = async (user) => {
     setUserState(user);
     await AsyncStorage.setItem('spendiz_user', JSON.stringify(user));
   };
 
-  // ✅ Save access token
   const setToken = async (accessToken) => {
     setTokenState(accessToken);
     await AsyncStorage.setItem('spendiz_token', accessToken);
   };
 
-  // ✅ Save refresh token
   const setRefreshToken = async (refreshToken) => {
     await AsyncStorage.setItem('spendiz_refresh_token', refreshToken);
   };
 
-  // ✅ Logout user and clean all data
   const logout = async () => {
     await AsyncStorage.multiRemove([
       'spendiz_user',

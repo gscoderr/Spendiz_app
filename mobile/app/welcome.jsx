@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import axios from 'axios';
+
+import api from '../utils/axiosInstance.js'; // Adjust the import path as necessary
 import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
 
@@ -27,11 +28,12 @@ export default function Welcome() {
       Alert.alert('Invalid Number', 'Please enter a valid 10-digit phone number');
       return;
     }
-
+    Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
+    console.log(api.defaults.baseURL);
     try {
       setLoading(true);
       // Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
-      const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/auth/send-otp`, {
+      const response = await api.post(`/auth/send-otp`, {
         phone,
       });
 
