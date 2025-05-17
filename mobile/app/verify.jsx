@@ -19,7 +19,7 @@ export default function Verify() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { phone, setPhone, setUser, setToken } = useUser(); // Destructure setUser and setToken from the context
+ const { phone, setPhone, setUser, setToken, setRefreshToken } = useUser(); // Destructure setUser and setToken from the context
 
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
@@ -41,12 +41,14 @@ export default function Verify() {
       // console.log('OTP Verify Response:', res.data);
 
       if (res.data.success) {
-        if (res.data.data?.user) {
-          // Existing user
-          setUser(res.data.data.user);
-          setToken(res.data.data.accessToken);
+        const data = res.data.data;
+
+        if (data?.user) {
+          await setUser(data.user);
+          await setToken(data.accessToken);
+          await setRefreshToken(data.refreshToken);
           router.push('/dashboard');
-        } else if (res.data.data?.exists === false) {
+        } else if (data?.exists === false) {
           // New user
           setPhone(phone);
           Alert.alert("Info", res.data.message || "Redirecting to registration");
@@ -54,6 +56,8 @@ export default function Verify() {
         } else {
           Alert.alert("Error", "Unexpected response from server.");
         }
+      }else {
+        Alert.alert("Error", res.data.message || "Verification failed");
       }
 
     } catch (err) {

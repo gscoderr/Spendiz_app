@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../context/user.context.js'; 
 
 export default function Dashboard() {
   const navigation = useNavigation();
-  const userName = 'Gog';
+  const { user } = useUser(); 
+  const userName = user?.name || 'User';
   const avatarInitials =
     userName.length === 1
       ? userName[0].toUpperCase()
