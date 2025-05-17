@@ -13,19 +13,20 @@ import { useUser } from '../context/user.context.js';
 
 export default function Dashboard() {
   const navigation = useNavigation();
-  const userName = 'Gog';
+  const { user } = useUser();
+  const userName = user?.name || 'User';
+
   const avatarInitials =
     userName.length === 1
       ? userName[0].toUpperCase()
       : (userName[0] + userName[userName.length - 1]).toUpperCase();
-
   return (
     <View style={styles.container}>
       {/* Top Greeting & Refer */}
       <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.userSection}
-          onPress={() => router.push("/profile")} // ✅ now this works
+          onPress={() => navigation.navigate('profile')} // ✅ fixed
         >
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{avatarInitials}</Text>

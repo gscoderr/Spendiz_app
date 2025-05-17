@@ -184,7 +184,7 @@ export default function AddCard({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#0D0D2B", flex: 1,justifyContent: "center" },
+  container: { padding: 16, backgroundColor: "#0D0D2B", flex: 1, paddingTop: 60 },
   backBtn: { marginBottom: 16, alignSelf: "flex-start" },
   label: { fontWeight: "bold", marginTop: 10, marginBottom: 5, color: "#fff" },
   dropdown: {
