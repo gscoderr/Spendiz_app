@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView,
+  StyleSheet, Alert, ScrollView, KeyboardAvoidingView,Platform
 } from "react-native";
 import api from '../utils/axiosInstance.js'
 import { Ionicons } from "@expo/vector-icons";
