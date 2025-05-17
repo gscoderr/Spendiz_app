@@ -7,13 +7,42 @@ import {
   Linking,
   ScrollView,
   Image,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useUser } from "../context/user.context";
 
 export default function ProfileScreen() {
-  const { user } = useUser();
+
+  const { logout, user } = useUser();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout(); // ✅ Clear AsyncStorage + context
+              Alert.alert("Logged Out", "You have been logged out successfully.");
+              router.replace('/welcome'); // ✅ Go back to login screen
+            } catch (error) {
+              console.error("Logout Error:", error);
+              Alert.alert("Error", "Something went wrong during logout.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+
 
   return (
     <ScrollView style={styles.container}>
@@ -75,10 +104,7 @@ export default function ProfileScreen() {
       </View>
       <TouchableOpacity
         style={styles.logoutBtn}
-        onPress={() => {
-          setUser(null); // Optional: clear context
-          router.replace("/welcome"); // or login route
-        }}
+        onPress={handleLogout}
       >
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
@@ -149,16 +175,16 @@ const styles = StyleSheet.create({
   },
   actionText: { color: "#b91c1c", fontSize: 12, fontWeight: "600" },
   logoutBtn: {
-  marginTop: 30,
-  marginBottom: 50,
-  backgroundColor: '#ef4444',
-  paddingVertical: 12,
-  borderRadius: 8,
-  alignItems: 'center',
-},
-logoutText: {
-  color: '#fff',
-  fontWeight: '600',
-  fontSize: 16,
-},
+    marginTop: 30,
+    marginBottom: 100,
+    backgroundColor: '#ef4444',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 });
