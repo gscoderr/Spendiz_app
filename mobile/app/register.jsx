@@ -15,8 +15,7 @@ import { useUser } from '../context/user.context.js'; // Adjust the import path 
 
 export default function ProfileAdd() {
   const router = useRouter();
-  const { user, setUser, phone } = useUser();
-
+  const { phone, setUser, setToken, setRefreshToken } = useUser();
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -36,6 +35,8 @@ export default function ProfileAdd() {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
+
+
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     const normalizedPhone = phone?.startsWith('+91') ? phone : `+91${phone}`;
 
@@ -49,8 +50,10 @@ export default function ProfileAdd() {
       });
 
       if (res.data.success) {
-        console.log('Registration Response:', res.data);
-        setUser(res.data.data);
+        const { user, accessToken, refreshToken } = res.data.data;
+        await setUser(user);
+        await setToken(accessToken);
+        await setRefreshToken(refreshToken);
         Alert.alert('Success', res.data.message || 'Profile saved successfully');
         router.replace('/dashboard');
       }

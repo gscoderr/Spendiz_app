@@ -6,16 +6,14 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-} from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router"; // ✅ import router
+} from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../context/user.context.js'; 
 
 export default function Dashboard() {
   const navigation = useNavigation();
-  const router = useRouter(); // ✅ define router here
-
-  const userName = "Gog";
+  const userName = 'Gog';
   const avatarInitials =
     userName.length === 1
       ? userName[0].toUpperCase()
