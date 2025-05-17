@@ -109,7 +109,7 @@ export default function AddCard({ navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       {/* 🔙 Back Icon */}
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={24} color="#000" />
+        <Ionicons name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
 
       <Text style={styles.label}>Select Bank</Text>
@@ -132,25 +132,28 @@ export default function AddCard({ navigation }) {
         zIndex={5000}
         zIndexInverse={1000}
       />
-
+      <Text style={styles.label}>Network</Text>
       <TextInput
         placeholder="Network"
         value={network}
         editable={false}
         style={styles.input}
       />
+      <Text style={styles.label}>Tier</Text>
       <TextInput
         placeholder="Tier"
         value={tier}
         editable={false}
         style={styles.input}
       />
+      <Text style={styles.label}>Card Holder Name</Text>
       <TextInput
         placeholder="Card Holder Name"
         value={cardHolderName}
         onChangeText={setCardHolderName}
         style={styles.input}
       />
+      <Text style={styles.label}>Card digit</Text>
       <TextInput
         placeholder="Last 4 Digits"
         value={last4Digits}
@@ -181,9 +184,9 @@ export default function AddCard({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f9f9f9" },
+  container: { padding: 16, backgroundColor: "#0D0D2B", flex: 1,justifyContent: "center" },
   backBtn: { marginBottom: 16, alignSelf: "flex-start" },
-  label: { fontWeight: "bold", marginTop: 10, marginBottom: 5 },
+  label: { fontWeight: "bold", marginTop: 10, marginBottom: 5, color: "#fff" },
   dropdown: {
     borderWidth: 1,
     borderColor: "#ccc",
