@@ -60,7 +60,7 @@ export default function ProfileAdd() {
     } catch (err) {
       const backendError = err.response?.data?.message || err.message || 'Verification failed';
       console.error('OTP Verify Error:', err.response);
-      Alert.alert('Verification Error', backendError);
+      Alert.alert('Verification Error',"Email is registered already. Please try another email" );
     }
   };
 
