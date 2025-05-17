@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ScrollView
 } from "react-native";
-import axios from '../utils/axiosInstance.js'
+import api from '../utils/axiosInstance.js'
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -27,7 +27,7 @@ export default function AddCard({ navigation }) {
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const res = await axios.get(`/cards/bank`);
+        const res = await api.get(`/cards/bank`);
         setAllBanks(res.data);
       } catch (err) {
         Alert.alert("Error", "Failed to fetch banks");
@@ -41,7 +41,7 @@ export default function AddCard({ navigation }) {
   const fetchCardNames = async () => {
     if (bank) {
       try {
-        const res = await axios.get(`/cards/card-names`, {
+        const res = await api.get(`/cards/card-names`, {
           params: { bank }
         });
         // 🔁 FIX: Convert string array into dropdown items
@@ -65,7 +65,7 @@ export default function AddCard({ navigation }) {
     const fetchCardDetails = async () => {
       if (bank && cardName) {
         try {
-          const res = await axios.get(`/cards/card-details`, {
+          const res = await api.get(`/cards/card-details`, {
             params: { bank, cardName }
           });
           setNetwork(res.data.network || "");
