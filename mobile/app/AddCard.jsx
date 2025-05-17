@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView
+  StyleSheet, Alert, ScrollView, KeyboardAvoidingView,
 } from "react-native";
 import api from '../utils/axiosInstance.js'
 import { Ionicons } from "@expo/vector-icons";
-import SelectBankModal from "./select_bank";
+import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";
+
 
 export default function AddCard({ navigation }) {
   const [bank, setBank] = useState("");
@@ -38,27 +39,27 @@ export default function AddCard({ navigation }) {
 
   // 🔁 Fetch card names when bank is selected
   useEffect(() => {
-  const fetchCardNames = async () => {
-    if (bank) {
-      try {
-        const res = await api.get(`/cards/card-names`, {
-          params: { bank }
-        });
-        // 🔁 FIX: Convert string array into dropdown items
-        const items = res.data.map((card) => ({
-          label: card, // What you see
-          value: card  // What gets saved
-        }));
-        setCardNameOptions(items);
-      } catch (err) {
-        Alert.alert("Error", "Failed to fetch card names");
+    const fetchCardNames = async () => {
+      if (bank) {
+        try {
+          const res = await api.get(`/cards/card-names`, {
+            params: { bank }
+          });
+          // 🔁 FIX: Convert string array into dropdown items
+          const items = res.data.map((card) => ({
+            label: card, // What you see
+            value: card  // What gets saved
+          }));
+          setCardNameOptions(items);
+        } catch (err) {
+          Alert.alert("Error", "Failed to fetch card names");
+        }
+      } else {
+        setCardNameOptions([]);
       }
-    } else {
-      setCardNameOptions([]);
-    }
-  };
-  fetchCardNames();
-}, [bank]);
+    };
+    fetchCardNames();
+  }, [bank]);
 
   // 🔁 Fetch card details on selection
   useEffect(() => {
@@ -106,80 +107,81 @@ export default function AddCard({ navigation }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* 🔙 Back Icon */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      <Text style={styles.label}>Select Bank</Text>
-      <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
-        <Text>{bank || "Tap to select your bank"}</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Select Bank</Text>
+        <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
+          <Text>{bank || "Tap to select your bank"}</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.label}>Select Card Name</Text>
-      <DropDownPicker
-        open={dropdownOpen}
-        value={cardName}
-        items={cardNameOptions}
-        setOpen={setDropdownOpen}
-        setValue={setCardName}
-        setItems={setCardNameOptions}
-        searchable={true}
-        placeholder="Select card name"
-        style={styles.dropdownPicker}
-        dropDownContainerStyle={{ borderColor: '#ccc' }}
-        zIndex={5000}
-        zIndexInverse={1000}
-      />
-      <Text style={styles.label}>Network</Text>
-      <TextInput
-        placeholder="Network"
-        value={network}
-        editable={false}
-        style={styles.input}
-      />
-      <Text style={styles.label}>Tier</Text>
-      <TextInput
-        placeholder="Tier"
-        value={tier}
-        editable={false}
-        style={styles.input}
-      />
-      <Text style={styles.label}>Card Holder Name</Text>
-      <TextInput
-        placeholder="Card Holder Name"
-        value={cardHolderName}
-        onChangeText={setCardHolderName}
-        style={styles.input}
-      />
-      <Text style={styles.label}>Card digit</Text>
-      <TextInput
-        placeholder="Last 4 Digits"
-        value={last4Digits}
-        onChangeText={setLast4Digits}
-        maxLength={4}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+        <Text style={styles.label}>Select Card Name</Text>
+        <DropDownPicker
+          open={dropdownOpen}
+          value={cardName}
+          items={cardNameOptions}
+          setOpen={setDropdownOpen}
+          setValue={setCardName}
+          setItems={setCardNameOptions}
+          searchable={true}
+          placeholder="Select card name"
+          style={styles.dropdownPicker}
+          dropDownContainerStyle={{ borderColor: '#ccc' }}
+          zIndex={5000}
+          zIndexInverse={1000}
+        />
+        <Text style={styles.label}>Network</Text>
+        <TextInput
+          placeholder="Network"
+          value={network}
+          editable={false}
+          style={styles.input}
+        />
+        <Text style={styles.label}>Tier</Text>
+        <TextInput
+          placeholder="Tier"
+          value={tier}
+          editable={false}
+          style={styles.input}
+        />
+        <Text style={styles.label}>Card Holder Name</Text>
+        <TextInput
+          placeholder="Card Holder Name"
+          value={cardHolderName}
+          onChangeText={setCardHolderName}
+          style={styles.input}
+        />
+        <Text style={styles.label}>Card digit</Text>
+        <TextInput
+          placeholder="Last 4 Digits"
+          value={last4Digits}
+          onChangeText={setLast4Digits}
+          maxLength={4}
+          keyboardType="numeric"
+          style={styles.input}
+        />
 
-      <TouchableOpacity onPress={handleSave} style={styles.button}>
-        <Text style={styles.buttonText}>Save Card</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleSave} style={styles.button}>
+          <Text style={styles.buttonText}>Save Card</Text>
+        </TouchableOpacity>
 
-      <SelectBankModal
-        visible={showBankModal}
-        onClose={() => setShowBankModal(false)}
-        onSelect={(selectedBank) => {
-          setBank(selectedBank);
-          setCardName(null);
-          setNetwork("");
-          setTier("");
-          setShowBankModal(false);
-        }}
-        otherBanks={allBanks.filter((b) => !popularBanks.includes(b))}
-      />
-    </ScrollView>
+        <SelectBankModal
+          visible={showBankModal}
+          onClose={() => setShowBankModal(false)}
+          onSelect={(selectedBank) => {
+            setBank(selectedBank);
+            setCardName(null);
+            setNetwork("");
+            setTier("");
+            setShowBankModal(false);
+          }}
+          otherBanks={allBanks.filter((b) => !popularBanks.includes(b))}
+        />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
