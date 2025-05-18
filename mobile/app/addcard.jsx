@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform
+  StyleSheet, Alert, KeyboardAvoidingView, Platform
 } from "react-native";
-import api from '../utils/axiosInstance.js'
+import api from "../utils/axiosInstance.js";
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";
-import { useRouter } from 'expo-router';
-
+import { useRouter } from "expo-router";
 
 export default function AddCard() {
-   const router = useRouter();
+  const router = useRouter();
   const [bank, setBank] = useState("");
   const [cardName, setCardName] = useState(null);
   const [network, setNetwork] = useState("");
@@ -20,38 +19,38 @@ export default function AddCard() {
   const [cardHolderName, setCardHolderName] = useState("");
   const [showBankModal, setShowBankModal] = useState(false);
 
-  
   const [allBanks, setAllBanks] = useState([]);
   const [cardNameOptions, setCardNameOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const popularBanks = ["HDFC", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"];
+  const popularBanks = [
+    "HDFC Bank", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"
+  ];
 
-  // 🔁 Fetch all banks
+  // 🔁 Fetch all banks from backend
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const res = await api.get(`/cards/bank`);
+        const res = await api.get(`/cards/banks`);
+        console.log("✅ Banks from backend:", res.data);
         setAllBanks(res.data);
       } catch (err) {
+        console.error("❌ Error fetching banks:", err?.response?.data || err.message);
         Alert.alert("Error", "Failed to fetch banks");
       }
     };
     fetchBanks();
   }, []);
 
-  // 🔁 Fetch card names when bank is selected
+  // 🔁 Fetch card names for selected bank
   useEffect(() => {
     const fetchCardNames = async () => {
-      if (bank) {
+      if (bank && allBanks.includes(bank)) {
         try {
-          const res = await api.get(`/cards/card-names`, {
-            params: { bank }
-          });
-          // 🔁 FIX: Convert string array into dropdown items
+          const res = await api.get(`/cards/card-names`, { params: { bank } });
           const items = res.data.map((card) => ({
-            label: card, // What you see
-            value: card  // What gets saved
+            label: card,
+            value: card
           }));
           setCardNameOptions(items);
         } catch (err) {
@@ -64,14 +63,12 @@ export default function AddCard() {
     fetchCardNames();
   }, [bank]);
 
-  // 🔁 Fetch card details on selection
+  // 🔁 Fetch network/tier on card name selection
   useEffect(() => {
     const fetchCardDetails = async () => {
-      if (bank && cardName) {
+      if (bank && cardName && allBanks.includes(bank)) {
         try {
-          const res = await api.get(`/cards/card-details`, {
-            params: { bank, cardName }
-          });
+          const res = await api.get(`/cards/card-details`, { params: { bank, cardName } });
           setNetwork(res.data.network || "");
           setTier(res.data.tier || "");
         } catch (err) {
@@ -135,21 +132,25 @@ export default function AddCard() {
           dropDownContainerStyle={{ borderColor: '#ccc' }}
           zIndex={5000}
           zIndexInverse={1000}
+          disabled={!allBanks.includes(bank)}
         />
+
         <Text style={styles.label}>Network</Text>
         <TextInput
           placeholder="Network"
           value={network}
           editable={false}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: "#eee" }]}
         />
+
         <Text style={styles.label}>Tier</Text>
         <TextInput
           placeholder="Tier"
           value={tier}
           editable={false}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: "#eee" }]}
         />
+
         <Text style={styles.label}>Card Holder Name</Text>
         <TextInput
           placeholder="Card Holder Name"
@@ -157,6 +158,7 @@ export default function AddCard() {
           onChangeText={setCardHolderName}
           style={styles.input}
         />
+
         <Text style={styles.label}>Card digit</Text>
         <TextInput
           placeholder="Last 4 Digits"
@@ -171,17 +173,25 @@ export default function AddCard() {
           <Text style={styles.buttonText}>Save Card</Text>
         </TouchableOpacity>
 
+        {/* ✅ Updated modal with bank validation */}
         <SelectBankModal
           visible={showBankModal}
           onClose={() => setShowBankModal(false)}
           onSelect={(selectedBank) => {
-            setBank(selectedBank);
-            setCardName(null);
-            setNetwork("");
-            setTier("");
+            if (allBanks.includes(selectedBank)) {
+              setBank(selectedBank);
+              setCardName(null);
+              setNetwork("");
+              setTier("");
+            } else {
+              Alert.alert(
+                "Coming Soon!",
+                `We're working to add ${selectedBank} very soon. Stay tuned!`
+              );
+            }
             setShowBankModal(false);
           }}
-          otherBanks={allBanks.filter((b) => !popularBanks.includes(b))}
+          otherBanks={popularBanks.filter((b) => !allBanks.includes(b))}
         />
       </View>
     </KeyboardAvoidingView>

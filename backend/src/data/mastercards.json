@@ -1,0 +1,20 @@
+[
+  {
+    "bank": "SBI",
+    "cardName": "Aditya Birla",
+    "network": "Visa",
+    "tier": "Platinum"
+  },
+  {
+    "bank": "SBI",
+    "cardName": "BPCL Octane",
+    "network": "Mastercard",
+    "tier": "Signature"
+  },
+  {
+    "bank": "HDFC",
+    "cardName": "Millennia",
+    "network": "Visa",
+    "tier": "Platinum"
+  }
+]

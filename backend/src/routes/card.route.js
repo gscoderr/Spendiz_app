@@ -1,11 +1,13 @@
 import express from 'express';
-// import MasterCard from '../models/mastercard.model.js';
+import MasterCard from '../models/mastercards.model.js'; // ✅ correct filename and path
+
 
 const router = express.Router();
 
 // ✅ 1. Get All Banks (Distinct)
 router.get('/banks', async (req, res) => {
   try {
+    
     const banks = await MasterCard.distinct("bank");
     res.json(banks);
   } catch (err) {

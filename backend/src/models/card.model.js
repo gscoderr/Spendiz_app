@@ -1,19 +1,17 @@
+// 📍 backend/src/models/card.model.js
 import mongoose from 'mongoose';
 
-const cardSchema = new mongoose.Schema({
-
-    bank: { 
-        type: String,
-         required: true 
-        },
+const cardSchema = new mongoose.Schema(
+  {
+    bank: { type: String, required: true },
     cardName: { type: String, required: true },
     network: { type: String, required: true },
     tier: { type: String, required: true },
-    last4Digits: { type: String, required: true, maxlength: 4 },
+    last4Digits: { type: String, required: true },
     cardHolderName: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-});
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }
+  },
+  { timestamps: true }
+);
 
-const Card = mongoose.model('Card', cardSchema);
-
-export default Card;
+export default mongoose.model('Card', cardSchema);
