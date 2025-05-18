@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView,Platform
+  StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform
 } from "react-native";
 import api from '../utils/axiosInstance.js'
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";
+import { useRouter } from 'expo-router';
 
 
-export default function AddCard({ navigation }) {
+export default function AddCard() {
+   const router = useRouter();
   const [bank, setBank] = useState("");
   const [cardName, setCardName] = useState(null);
   const [network, setNetwork] = useState("");
@@ -110,7 +112,7 @@ export default function AddCard({ navigation }) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <View style={styles.container}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
