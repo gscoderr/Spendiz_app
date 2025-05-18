@@ -13,19 +13,25 @@ export const addCard = asyncHandler(async (req, res) => {
   }
 
 
-  const exists = await Card.findOne({ userId, bank, cardName, last4Digits });
+const exists = await Card.findOne({
+  userId: req.user._id,
+  bank,
+  cardName,
+  last4Digits
+});
+
   if (exists) {
     throw new ApiError(409, "This card already exists in your account.");
   }
 
   const newCard = await Card.create({
     bank,
+    userId: req.user?._id, // optional
     cardName,
     network,
     tier,
     last4Digits,
     cardHolderName,
-    userId: req.user?._id, // optional
   });
 
   return res.status(201).json(new ApiResponse(201, newCard, 'Card saved successfully'));
@@ -62,6 +68,10 @@ export const getCardDetails = asyncHandler(async (req, res) => {
 });
 
 export const getUserCards = asyncHandler(async (req, res) => {
-  const cards = await Card.find().sort({ createdAt: -1 });
-  return res.status(200).json(new ApiResponse(200, cards));
+  const userId = req.user._id;
+
+  const cards = await Card.find({ userId }).sort({ createdAt: -1 });
+
+  return res.status(200).json(new ApiResponse(200, cards, "User cards fetched"));
 });
+
