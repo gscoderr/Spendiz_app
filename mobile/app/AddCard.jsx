@@ -86,7 +86,7 @@ export default function AddCard({ navigation }) {
     }
 
     try {
-      const res = await axios.post(`/cards/add`, {
+      const res = await api.post(`/cards/add`, {
         bank,
         cardName,
         network,
