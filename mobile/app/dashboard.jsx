@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../context/user.context.js'; 
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useUser } from "../context/user.context.js";
 
 export default function Dashboard() {
   const navigation = useNavigation();
   const { user } = useUser();
-  const userName = user?.name || 'User';
+  const userName = user?.name || "User";
 
   const avatarInitials =
     userName.length === 1
@@ -26,7 +26,7 @@ export default function Dashboard() {
       <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.userSection}
-          onPress={() => navigation.navigate('profile')} // ✅ fixed
+          onPress={() => navigation.navigate("profile")} // ✅ fixed
         >
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{avatarInitials}</Text>
@@ -82,11 +82,51 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.spendBox}>
-          <Text style={styles.sectionTitle}>Spend Analysis</Text>
-          <Text style={styles.spendSub}>This Month</Text>
-          <Text style={styles.spendAmount}>₹0</Text>
-          <Text style={styles.breakupLink}>View Detailed Breakup</Text>
+        <View style={styles.categoryContainer}>
+          <Text style={styles.sectionTitle}>Spend Category</Text>
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate("Food")}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.icon}>🍴</Text>
+            </View>
+            <Text style={styles.label}>Dining</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate("Shopping")}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.icon}>🛍️</Text>
+            </View>
+            <Text style={styles.label}>Shopping</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate("Travel")}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.icon}>✈️</Text>
+            </View>
+            <Text style={styles.label}>Travel</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate("Entertainment")}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.icon}>🎬</Text>
+            </View>
+            <Text style={styles.label}>Entertainment</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -266,4 +306,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
+  categoryContainer: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 16,
+  marginVertical: 20,
+},
+
+categoryItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 14,
+  borderBottomWidth: 1,
+  borderBottomColor: '#eee',
+},
+
+iconCircle: {
+  backgroundColor: '#f0f0ff',
+  borderRadius: 20,
+  width: 40,
+  height: 40,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginRight: 12,
+},
+
+icon: {
+  fontSize: 20,
+},
+
+label: {
+  flex: 1,
+  fontSize: 16,
+  fontWeight: '500',
+},
+
+arrow: {
+  fontSize: 22,
+  color: '#888',
+}
 });
