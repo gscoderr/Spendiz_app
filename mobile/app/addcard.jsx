@@ -48,6 +48,10 @@ export default function AddCard() {
       if (bank && allBanks.includes(bank)) {
         try {
           const res = await api.get(`/cards/card-names`, { params: { bank } });
+
+          if (res.data.length === 0) {
+            Alert.alert("No Cards", `No cards found for ${bank}`);
+          }
           const items = res.data.map((card) => ({
             label: card,
             value: card

@@ -12,6 +12,12 @@ export const addCard = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'All fields are required');
   }
 
+
+  const exists = await Card.findOne({ userId, bank, cardName, last4Digits });
+  if (exists) {
+    throw new ApiError(409, "This card already exists in your account.");
+  }
+
   const newCard = await Card.create({
     bank,
     cardName,
@@ -28,7 +34,6 @@ export const addCard = asyncHandler(async (req, res) => {
 export const getBanks = asyncHandler(async (req, res) => {
   const banks = await MasterCard.distinct("bank");
 
-  console.log("Banks  is : ", banks);
   return res.status(200).json(banks);
 });
 
