@@ -100,8 +100,13 @@ export default function AddCard() {
 
       if (res.data.success) {
         Alert.alert("Success", "Card added successfully");
-        setBank(""); setCardName(null); setNetwork(""); setTier("");
-        setCardHolderName(""); setLast4Digits("");
+        setBank(""); 
+        setCardName(null); 
+        setNetwork(""); 
+        setTier("");
+        setCardHolderName(""); 
+        setLast4Digits("");
+        router.replace("/dashboard");
       } else {
         Alert.alert("Error", res.data.message || "Failed to add card");
       }
