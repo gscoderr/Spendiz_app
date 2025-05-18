@@ -1,11 +1,14 @@
 import express from 'express';
-// import MasterCard from '../models/mastercard.model.js';
+import MasterCard from '../models/mastercards.model.js'; // ✅ correct filename and path
+import { addCard} from '../controllers/card.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 // ✅ 1. Get All Banks (Distinct)
 router.get('/banks', async (req, res) => {
   try {
+    
     const banks = await MasterCard.distinct("bank");
     res.json(banks);
   } catch (err) {
@@ -47,6 +50,10 @@ router.get('/card-details', async (req, res) => {
     console.error("❌ Error fetching card details:", err.message);
     res.status(500).json({ message: "Error fetching card details" });
   }
+
 });
+
+// ✅ 4. Add Card
+router.post('/add', verifyJWT, addCard);
 
 export default router;

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform
+  StyleSheet, Alert, KeyboardAvoidingView, Platform
 } from "react-native";
-import api from '../utils/axiosInstance.js'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+import api from "../utils/axiosInstance.js";
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";
-import { useRouter } from 'expo-router';
-
+import { useRouter } from "expo-router";
 
 export default function AddCard() {
-   const router = useRouter();
+  const router = useRouter();
   const [bank, setBank] = useState("");
   const [cardName, setCardName] = useState(null);
   const [network, setNetwork] = useState("");
@@ -20,38 +21,42 @@ export default function AddCard() {
   const [cardHolderName, setCardHolderName] = useState("");
   const [showBankModal, setShowBankModal] = useState(false);
 
-  
   const [allBanks, setAllBanks] = useState([]);
   const [cardNameOptions, setCardNameOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const popularBanks = ["HDFC", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"];
+  const popularBanks = [
+    "HDFC Bank", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"
+  ];
 
-  // 🔁 Fetch all banks
+  // 🔁 Fetch all banks from backend
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const res = await api.get(`/cards/bank`);
+        const res = await api.get(`/cards/banks`);
+        console.log("✅ Banks from backend:", res.data);
         setAllBanks(res.data);
       } catch (err) {
+        console.error("❌ Error fetching banks:", err?.response?.data || err.message);
         Alert.alert("Error", "Failed to fetch banks");
       }
     };
     fetchBanks();
   }, []);
 
-  // 🔁 Fetch card names when bank is selected
+  // 🔁 Fetch card names for selected bank
   useEffect(() => {
     const fetchCardNames = async () => {
-      if (bank) {
+      if (bank && allBanks.includes(bank)) {
         try {
-          const res = await api.get(`/cards/card-names`, {
-            params: { bank }
-          });
-          // 🔁 FIX: Convert string array into dropdown items
+          const res = await api.get(`/cards/card-names`, { params: { bank } });
+
+          if (res.data.length === 0) {
+            Alert.alert("No Cards", `No cards found for ${bank}`);
+          }
           const items = res.data.map((card) => ({
-            label: card, // What you see
-            value: card  // What gets saved
+            label: card,
+            value: card
           }));
           setCardNameOptions(items);
         } catch (err) {
@@ -64,14 +69,12 @@ export default function AddCard() {
     fetchCardNames();
   }, [bank]);
 
-  // 🔁 Fetch card details on selection
+  // 🔁 Fetch network/tier on card name selection
   useEffect(() => {
     const fetchCardDetails = async () => {
-      if (bank && cardName) {
+      if (bank && cardName && allBanks.includes(bank)) {
         try {
-          const res = await api.get(`/cards/card-details`, {
-            params: { bank, cardName }
-          });
+          const res = await api.get(`/cards/card-details`, { params: { bank, cardName } });
           setNetwork(res.data.network || "");
           setTier(res.data.tier || "");
         } catch (err) {
@@ -99,8 +102,13 @@ export default function AddCard() {
 
       if (res.data.success) {
         Alert.alert("Success", "Card added successfully");
-        setBank(""); setCardName(null); setNetwork(""); setTier("");
-        setCardHolderName(""); setLast4Digits("");
+        setBank("");
+        setCardName(null);
+        setNetwork("");
+        setTier("");
+        setCardHolderName("");
+        setLast4Digits("");
+        router.replace("/dashboard");
       } else {
         Alert.alert("Error", res.data.message || "Failed to add card");
       }
@@ -110,17 +118,23 @@ export default function AddCard() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
       <View style={styles.container}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.label}>Select Bank</Text>
-        <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
-          <Text>{bank || "Tap to select your bank"}</Text>
-        </TouchableOpacity>
+         <Text style={styles.label}>Select Bank</Text>
+          <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
+            <Text>{bank || "Tap to select your bank"}</Text>
+          </TouchableOpacity>
 
+
+        {/* 🚫 Move DropDownPicker OUTSIDE scroll to avoid nesting issue */}
         <Text style={styles.label}>Select Card Name</Text>
         <DropDownPicker
           open={dropdownOpen}
@@ -135,56 +149,78 @@ export default function AddCard() {
           dropDownContainerStyle={{ borderColor: '#ccc' }}
           zIndex={5000}
           zIndexInverse={1000}
-        />
-        <Text style={styles.label}>Network</Text>
-        <TextInput
-          placeholder="Network"
-          value={network}
-          editable={false}
-          style={styles.input}
-        />
-        <Text style={styles.label}>Tier</Text>
-        <TextInput
-          placeholder="Tier"
-          value={tier}
-          editable={false}
-          style={styles.input}
-        />
-        <Text style={styles.label}>Card Holder Name</Text>
-        <TextInput
-          placeholder="Card Holder Name"
-          value={cardHolderName}
-          onChangeText={setCardHolderName}
-          style={styles.input}
-        />
-        <Text style={styles.label}>Card digit</Text>
-        <TextInput
-          placeholder="Last 4 Digits"
-          value={last4Digits}
-          onChangeText={setLast4Digits}
-          maxLength={4}
-          keyboardType="numeric"
-          style={styles.input}
+          disabled={!allBanks.includes(bank)}
         />
 
-        <TouchableOpacity onPress={handleSave} style={styles.button}>
-          <Text style={styles.buttonText}>Save Card</Text>
-        </TouchableOpacity>
+        {/* ✅ All scrollable content should go inside KeyboardAwareScrollView */}
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom:3 }}
+        >
+         
+          {/* All inputs */}
+          <Text style={styles.label}>Network</Text>
+          <TextInput
+            placeholder="Network"
+            value={network}
+            editable={false}
+            style={[styles.input, { backgroundColor: "#eee" }]}
+          />
 
+          <Text style={styles.label}>Tier</Text>
+          <TextInput
+            placeholder="Tier"
+            value={tier}
+            editable={false}
+            style={[styles.input, { backgroundColor: "#eee" }]}
+          />
+
+          <Text style={styles.label}>Card Holder Name</Text>
+          <TextInput
+            placeholder="Card Holder Name"
+            value={cardHolderName}
+            onChangeText={setCardHolderName}
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Card digit</Text>
+          <TextInput
+            placeholder="Last 4 Digits"
+            value={last4Digits}
+            onChangeText={setLast4Digits}
+            maxLength={4}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+
+          <TouchableOpacity onPress={handleSave} style={styles.button}>
+            <Text style={styles.buttonText}>Save Card</Text>
+          </TouchableOpacity>
+        </KeyboardAwareScrollView>
+
+        {/* Modal */}
         <SelectBankModal
           visible={showBankModal}
           onClose={() => setShowBankModal(false)}
           onSelect={(selectedBank) => {
-            setBank(selectedBank);
-            setCardName(null);
-            setNetwork("");
-            setTier("");
+            if (allBanks.includes(selectedBank)) {
+              setBank(selectedBank);
+              setCardName(null);
+              setNetwork("");
+              setTier("");
+            } else {
+              Alert.alert("Coming Soon!", `We're working to add ${selectedBank} soon.`);
+            }
             setShowBankModal(false);
           }}
-          otherBanks={allBanks.filter((b) => !popularBanks.includes(b))}
+          otherBanks={popularBanks.filter((b) => !allBanks.includes(b))}
         />
       </View>
     </KeyboardAvoidingView>
+
+
   );
 }
 
