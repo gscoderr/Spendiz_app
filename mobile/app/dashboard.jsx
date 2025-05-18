@@ -54,7 +54,6 @@ export default function Dashboard() {
             <Text style={styles.viewLink}>View</Text>
           </TouchableOpacity>
         </View>
-
         <View style={styles.rewardBox}>
           <Text style={styles.points}>0 Points</Text>
           <Text style={styles.subText}>Fetch your reward points</Text>
@@ -68,7 +67,6 @@ export default function Dashboard() {
             />
           </TouchableOpacity>
         </View>
-
         <View style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Your Cards</Text>
           <TouchableOpacity
@@ -81,12 +79,14 @@ export default function Dashboard() {
             </Text>
           </TouchableOpacity>
         </View>
-
         <View style={styles.categoryContainer}>
           <Text style={styles.sectionTitle}>Spend Category</Text>
+
           <TouchableOpacity
             style={styles.categoryItem}
-            onPress={() => navigation.navigate("Food")}
+            onPress={() =>
+              navigation.navigate("subcategory", { category: "dining" })
+            }
           >
             <View style={styles.iconCircle}>
               <Text style={styles.icon}>🍴</Text>
@@ -97,7 +97,9 @@ export default function Dashboard() {
 
           <TouchableOpacity
             style={styles.categoryItem}
-            onPress={() => navigation.navigate("Shopping")}
+            onPress={() =>
+              navigation.navigate("subcategory", { category: "shopping" })
+            }
           >
             <View style={styles.iconCircle}>
               <Text style={styles.icon}>🛍️</Text>
@@ -108,7 +110,9 @@ export default function Dashboard() {
 
           <TouchableOpacity
             style={styles.categoryItem}
-            onPress={() => navigation.navigate("Travel")}
+            onPress={() =>
+              navigation.navigate("subcategory", { category: "travel" })
+            }
           >
             <View style={styles.iconCircle}>
               <Text style={styles.icon}>✈️</Text>
@@ -119,7 +123,9 @@ export default function Dashboard() {
 
           <TouchableOpacity
             style={styles.categoryItem}
-            onPress={() => navigation.navigate("Entertainment")}
+            onPress={() =>
+              navigation.navigate("subcategory", { category: "entertainment" })
+            }
           >
             <View style={styles.iconCircle}>
               <Text style={styles.icon}>🎬</Text>
@@ -307,42 +313,42 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   categoryContainer: {
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 16,
-  marginVertical: 20,
-},
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 20,
+  },
 
-categoryItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  paddingVertical: 14,
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee',
-},
+  categoryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
 
-iconCircle: {
-  backgroundColor: '#f0f0ff',
-  borderRadius: 20,
-  width: 40,
-  height: 40,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 12,
-},
+  iconCircle: {
+    backgroundColor: "#f0f0ff",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
 
-icon: {
-  fontSize: 20,
-},
+  icon: {
+    fontSize: 20,
+  },
 
-label: {
-  flex: 1,
-  fontSize: 16,
-  fontWeight: '500',
-},
+  label: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "500",
+  },
 
-arrow: {
-  fontSize: 22,
-  color: '#888',
-}
+  arrow: {
+    fontSize: 22,
+    color: "#888",
+  },
 });
