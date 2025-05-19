@@ -1,17 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import api from '../utils/axiosInstance.js';
 
 export default function CreditCards() {
   const navigation = useNavigation();
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [longPressedCardId, setLongPressedCardId] = useState(null);
+
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const res = await api.get("/cards/user");
+        setCards(res.data.data);
+      } catch (err) {
+        console.error("❌ Error fetching cards:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCards();
+  }, []);
+
+
+  const handleDelete = async (cardId) => {
+    try {
+      await api.delete(`/cards/${cardId}`);
+      setCards(prev => prev.filter(c => c._id !== cardId));
+      setLongPressedCardId(null);
+      Alert.alert("Success", "Card deleted");
+    } catch (err) {
+      console.error("❌ Delete failed:", err.message);
+      Alert.alert("Error", "Failed to delete card");
+    }
+  };
+
+
+  function Feature({ label, icon }) {
+    return (
+      <TouchableOpacity style={styles.feature}>
+        <Ionicons name={icon} size={22} color="#000" />
+        <Text style={styles.featureLabel}>{label}</Text>
+      </TouchableOpacity>
+    );
+  }
+
 
   return (
     <ScrollView style={styles.container}>
@@ -51,24 +95,83 @@ export default function CreditCards() {
 
       {/* Your Cards */}
       <View style={styles.cardsHeader}>
-        <Text style={styles.sectionTitle}>Your cards <Text style={styles.badge}>1</Text></Text>
+        <Text style={styles.sectionTitle}>
+          Your cards <Text style={styles.badge}>{cards.length}</Text>
+        </Text>
         <TouchableOpacity onPress={() => navigation.navigate('addcard')}>
           <Text style={styles.addCardLink}>+ Add card</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Card UI */}
-      <View style={styles.cardBox}>
-        <Text style={styles.cardTitle}>SBI</Text>
-        <Text style={styles.cardSub}>Air India Signature XX</Text>
+      {/* Card List */}
+      {loading ? (
+        <ActivityIndicator color="#000" size="large" />
+      ) : cards.length === 0 ? (
+        <Text style={{ color: "#666", textAlign: "center", marginTop: 20 }}>
+          You haven't added any cards yet.
+        </Text>
+      ) : (
+        cards.map((card, index) => {
+          const isLongPressed = longPressedCardId === card._id;
 
-        <View style={styles.billRow}>
-          <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
-          <TouchableOpacity style={styles.payNowBtn}>
-            <Text style={styles.payNowText}>Pay Now</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          return (
+            <TouchableOpacity
+              key={card._id}
+              onLongPress={() => setLongPressedCardId(card._id)}
+              delayLongPress={2000} // 2 seconds
+              activeOpacity={1}
+            >
+              <View key={index} style={[styles.cardBox, isLongPressed && styles.blurredCard]}>
+                {!isLongPressed ? (
+                  <>
+                    <Text style={styles.cardTitle}>{card.bank}</Text>
+                    <Text style={styles.cardSub}>{card.cardName}</Text>
+
+                    <View style={styles.billRow}>
+                      <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
+                      <TouchableOpacity style={styles.payNowBtn}>
+                        <Text style={styles.payNowText}>Pay Now</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.actionOverlay}>
+                    <TouchableOpacity
+                      style={styles.deleteBtn}
+                      onPress={() => handleDelete(card._id)}
+                    >
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelBtn}
+                      onPress={() => setLongPressedCardId(null)}
+                    >
+                      <Text style={styles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )
+      }
+      {/* ) : (
+        cards.map((card, index) => (
+          <View key={index} style={styles.cardBox}>
+            <Text style={styles.cardTitle}>{card.bank}</Text>
+            <Text style={styles.cardSub}>{card.cardName}</Text>
+
+            <View style={styles.billRow}>
+              <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
+              <TouchableOpacity style={styles.payNowBtn}>
+                <Text style={styles.payNowText}>Pay Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))
+      )} */}
+
 
       {/* Feature Shortcuts */}
       <View style={styles.featuresRow}>
@@ -84,14 +187,6 @@ export default function CreditCards() {
   );
 }
 
-function Feature({ label, icon }) {
-  return (
-    <TouchableOpacity style={styles.feature}>
-      <Ionicons name={icon} size={22} color="#000" />
-      <Text style={styles.featureLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
@@ -141,8 +236,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: 'bold' },
   badge: {
-    backgroundColor: '#000',
-    color: '#fff',
+
+    color: '#000',
     paddingHorizontal: 6,
     borderRadius: 8,
     marginLeft: 6,
@@ -194,5 +289,82 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
   },
+  blurredCard: {
+    backgroundColor: '#1E1E3F99', // add transparency
+    position: 'relative',
+  },
+
+  actionOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+
+  deleteBtn: {
+    backgroundColor: 'red',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+
+  deleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+
+  cancelBtn: {
+    backgroundColor: '#ccc',
+    paddingVertical: 6,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+  },
+
+  cancelText: {
+    color: '#000',
+    fontWeight: '600',
+  },
+  blurredCard: {
+  backgroundColor: '#1E1E3F99', // add transparency
+  position: 'relative',
+},
+
+actionOverlay: {
+  position: 'absolute',
+  top: 20,
+  left: 0,
+  right: 0,
+  alignItems: 'center',
+  zIndex: 10,
+},
+
+deleteBtn: {
+  backgroundColor: 'red',
+  paddingVertical: 8,
+  paddingHorizontal: 20,
+  borderRadius: 20,
+  marginBottom: 10,
+},
+
+deleteText: {
+  color: '#fff',
+  fontWeight: 'bold',
+},
+
+cancelBtn: {
+  backgroundColor: '#ccc',
+  paddingVertical: 6,
+  paddingHorizontal: 18,
+  borderRadius: 20,
+},
+
+cancelText: {
+  color: '#000',
+  fontWeight: '600',
+},
+
+
 });
- 

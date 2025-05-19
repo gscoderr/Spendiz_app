@@ -1,6 +1,6 @@
 import express from 'express';
 import MasterCard from '../models/mastercards.model.js'; // ✅ correct filename and path
-import { addCard} from '../controllers/card.controller.js';
+import { addCard, getUserCards} from '../controllers/card.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
@@ -55,5 +55,7 @@ router.get('/card-details', async (req, res) => {
 
 // ✅ 4. Add Card
 router.post('/add', verifyJWT, addCard);
+// ✅ 5. Get All Cards for User
+router.get("/user", verifyJWT, getUserCards);
 
 export default router;

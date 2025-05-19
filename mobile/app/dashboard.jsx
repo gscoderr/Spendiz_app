@@ -1,4 +1,5 @@
-import React from "react";
+import api from "../utils/axiosInstance.js";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +16,22 @@ export default function Dashboard() {
   const navigation = useNavigation();
   const { user } = useUser();
   const userName = user?.name || "User";
+  const [savedCards, setSavedCards] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+
+
+  useEffect(() => {
+    const fetchSavedCards = async () => {
+      try {
+        const res = await api.get('/cards/user');
+        setSavedCards(res.data.data); // assuming you used ApiResponse
+      } catch (err) {
+        console.error("❌ Error fetching saved cards:", err.message);
+      }
+    };
+    fetchSavedCards();
+  }, []);
+
 
   const avatarInitials =
     userName.length === 1
@@ -70,17 +87,40 @@ export default function Dashboard() {
         </View>
 
         <View style={styles.cardSection}>
-          <Text style={styles.sectionTitle}>Your Cards</Text>
-          <TouchableOpacity
-            style={styles.addCard}
-            onPress={() => navigation.navigate("addcard")}
-          >
-            <Text style={styles.addIcon}>＋</Text>
-            <Text style={styles.addText}>
-              Add your cards to view rewards & offers
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.sectionTitle}>Your Cards</Text>
+
+            {savedCards.length > 1 && (
+              <TouchableOpacity onPress={() => navigation.navigate("creditcards")}>
+                <Text style={styles.viewAllText}>View All</Text>
+              </TouchableOpacity>
+
+            )}
+          </View>
+
+          {savedCards.length === 0 ? (
+            <TouchableOpacity
+              style={styles.addCard}
+              onPress={() => navigation.navigate("addcard")}
+            >
+              <Text style={styles.addIcon}>＋</Text>
+              <Text style={styles.addText}>
+                Add your cards to view rewards & offers
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.cardBox}>
+              <Text style={styles.bank}>{savedCards[0].bank}</Text>
+              <Text style={styles.last4}>•••• {savedCards[0].last4Digits}</Text>
+              <Text style={styles.holder}>{savedCards[0].cardHolderName}</Text>
+              <TouchableOpacity style={styles.payNowBtn}>
+                <Text style={styles.payNowText}>Pay Now</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
+
+
 
         <View style={styles.categoryContainer}>
           <Text style={styles.sectionTitle}>Spend Category</Text>
@@ -211,7 +251,47 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
+  }, viewAllText: {
+    textAlign: 'right',
+    color: '#3D5CFF',
+    marginTop: 10,
+    fontWeight: '600',
+    fontSize: 14,
   },
+  cardBox: {
+    backgroundColor: '#1E1E3F',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
+  },
+  bank: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  last4: {
+    color: '#ccc',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  holder: {
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 6,
+  },
+  payNowBtn: {
+    backgroundColor: '#fff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 10,
+  },
+  payNowText: {
+    color: '#000',
+    fontWeight: '600',
+  }
+  ,
   points: { fontSize: 28, fontWeight: "700" },
   subText: { color: "#555", marginTop: 6 },
   gmailButton: {
@@ -235,6 +315,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    // alignItems: "center",
+
+    marginBottom: 10,
+  },
+
   addCard: {
     backgroundColor: "#2F2F4F",
     padding: 24,
@@ -307,42 +395,60 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   categoryContainer: {
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 16,
-  marginVertical: 20,
-},
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 20,
+  },
 
-categoryItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  paddingVertical: 14,
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee',
-},
+  categoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
 
-iconCircle: {
-  backgroundColor: '#f0f0ff',
-  borderRadius: 20,
-  width: 40,
-  height: 40,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 12,
-},
+  iconCircle: {
+    backgroundColor: '#f0f0ff',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  addCard: {
+    backgroundColor: "#1E1E3F",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  addIcon: {
+    fontSize: 32,
+    color: "#fff",
+    marginBottom: 8,
+  },
+  addText: {
+    color: "#ccc",
+    textAlign: "center",
+    fontSize: 14,
+  },
 
-icon: {
-  fontSize: 20,
-},
 
-label: {
-  flex: 1,
-  fontSize: 16,
-  fontWeight: '500',
-},
+  icon: {
+    fontSize: 20,
+  },
 
-arrow: {
-  fontSize: 22,
-  color: '#888',
-}
+  label: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  arrow: {
+    fontSize: 22,
+    color: '#888',
+  }
 });
