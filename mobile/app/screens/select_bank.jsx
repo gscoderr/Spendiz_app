@@ -11,21 +11,21 @@ import {
 } from 'react-native';
 
 const popularBanks = [
-  { name: 'HDFC', icon: require('../assets/banks/hdfc.png') },
-  { name: 'SBI', icon: require('../assets/banks/sbi.png') },
-  { name: 'ICICI', icon: require('../assets/banks/icici.png') },
-  { name: 'AXIS', icon: require('../assets/banks/axis.png') },
-  { name: 'KOTAK', icon: require('../assets/banks/kotak.png') },
-  { name: 'RBL', icon: require('../assets/banks/rbl.png') },
-  { name: 'INDUSIND', icon: require('../assets/banks/indusind.png') },
-  { name: 'IDFC', icon: require('../assets/banks/idfc.png') },
+  { name: 'HDFC', icon: require('../../assets/banks/hdfc.png') },
+  { name: 'SBI', icon: require('../../assets/banks/sbi.png') },
+  { name: 'ICICI', icon: require('../../assets/banks/icici.png') },
+  { name: 'AXIS', icon: require('../../assets/banks/axis.png') },
+  { name: 'KOTAK', icon: require('../../assets/banks/kotak.png') },
+  { name: 'RBL', icon: require('../../assets/banks/rbl.png') },
+  { name: 'INDUSIND', icon: require('../../assets/banks/indusind.png') },
+  { name: 'IDFC', icon: require('../../assets/banks/idfc.png') },
 ];
 
 const otherBanks = [
-  { name: 'YES BANK', icon: require('../assets/banks/yes_bank.png') },
-  { name: 'AMEX', icon: require('../assets/banks/amex.png') },
-  { name: 'SCB', icon: require('../assets/banks/SCB.png') },
-  { name: 'FEDERAL BANK', icon: require('../assets/banks/federal_bank.jpeg') },
+  { name: 'YES BANK', icon: require('../../assets/banks/yes_bank.png') },
+  { name: 'AMEX', icon: require('../../assets/banks/amex.png') },
+  { name: 'SCB', icon: require('../../assets/banks/SCB.png') },
+  { name: 'FEDERAL BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
   // Add more as needed
 ];
 

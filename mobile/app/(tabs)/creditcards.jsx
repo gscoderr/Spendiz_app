@@ -8,15 +8,19 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import api from '../utils/axiosInstance.js';
-import TopBar from './component/topbar.jsx';
-import BottomTabBar from './component/bottombar.jsx';
+
+import { useRouter } from 'expo-router';
+import api from '../../utils/axiosInstance.js';
+import TopBar from '../component/topbar.jsx';
+
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function CreditCards() {
-  const navigation = useNavigation();
+
+  const router = useRouter();
+  
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [longPressedCardId, setLongPressedCardId] = useState(null);
@@ -95,23 +99,9 @@ export default function CreditCards() {
 
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0D2B' }}>
       <TopBar screen="Credit" />
-
-    
+      
     <ScrollView style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Credit Cards</Text>
-        <View style={styles.icons}>
-          <Ionicons
-            name="funnel-outline"
-            size={20}
-            color="#fff"
-            style={styles.icon}
-            onPress={() => setSortModalVisible(true)}
-          />
-          <Ionicons name="search" size={20} color="#fff" />
-        </View>
-      </View>
+      
 
       {/* Alert Box */}
       <View style={styles.alertBox}>
@@ -143,7 +133,7 @@ export default function CreditCards() {
         <Text style={styles.sectionTitle}>
           Your cards <Text style={styles.badge}>{cards.length}</Text>
         </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('addcard')}>
+        <TouchableOpacity onPress={() =>router.push("/screens/addcard")}>
           <Text style={styles.addCardLink}>+ Add card</Text>
         </TouchableOpacity>
       </View>
@@ -257,7 +247,7 @@ export default function CreditCards() {
       )}
 
     </ScrollView>
-      <BottomTabBar />
+     
     
     </SafeAreaView>
   );

@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-import api from "../utils/axiosInstance.js";
+import api from "../../utils/axiosInstance.js";
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";

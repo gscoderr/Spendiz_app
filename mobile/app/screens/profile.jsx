@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import { useUser } from "../context/user.context";
+import { useUser } from "../../context/user.context";
 
 export default function ProfileScreen() {
 

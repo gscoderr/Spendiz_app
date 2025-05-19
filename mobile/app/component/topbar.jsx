@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../../context/user.context.js';
+import HeaderBackButton from './backbutton.jsx';
 
 export default function TopBar({ screen }) {
   const navigation = useNavigation();
@@ -38,6 +39,7 @@ export default function TopBar({ screen }) {
 
       {screen === "Credit" && (
         <>
+            <HeaderBackButton />
           <Text style={styles.creditTitle}>Credit Cards</Text>
           <View style={styles.iconRow}>
             <Ionicons
@@ -59,12 +61,14 @@ export default function TopBar({ screen }) {
 
 const styles = StyleSheet.create({
   topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    paddingTop: 40,
-    backgroundColor: "#0D0D2B",
-  },
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 16,
+  paddingTop: 12,         // ✅ Minimize top padding (reduce from 40 to 12)
+  paddingBottom: 8,       // ✅ Optional, if needed
+  backgroundColor: "#0D0D2B",
+},
+
   userSection: {
     flexDirection: "row",
     alignItems: "center",
