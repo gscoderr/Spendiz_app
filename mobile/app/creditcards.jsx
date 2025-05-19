@@ -10,12 +10,18 @@ import {
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import api from '../utils/axiosInstance.js';
+import TopBar from './component/topbar.jsx';
+import BottomTabBar from './component/bottombar.jsx';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 export default function CreditCards() {
   const navigation = useNavigation();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [longPressedCardId, setLongPressedCardId] = useState(null);
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [sortOption, setSortOption] = useState("A-Z Bank (Default)");
 
 
   useEffect(() => {
@@ -46,6 +52,34 @@ export default function CreditCards() {
     }
   };
 
+  const sortCardsBy = (option) => {
+    let sorted = [...cards];
+
+    switch (option) {
+      case "A-Z Bank (Default)":
+        sorted.sort((a, b) => a.bank.localeCompare(b.bank));
+        break;
+
+      case "A-Z Card Name":
+        sorted.sort((a, b) => a.cardName.localeCompare(b.cardName));
+        break;
+
+      case "Reward Points":
+        sorted.sort((a, b) => (b.rewardPoints || 0) - (a.rewardPoints || 0));
+        break;
+
+      case "Due Date":
+        sorted.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+        break;
+
+      case "Total Due Amount":
+        sorted.sort((a, b) => (b.dueAmount || 0) - (a.dueAmount || 0));
+        break;
+    }
+
+    setCards(sorted);
+  };
+
 
   function Feature({ label, icon }) {
     return (
@@ -58,12 +92,23 @@ export default function CreditCards() {
 
 
   return (
+
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0D2B' }}>
+      <TopBar screen="Credit" />
+
+    
     <ScrollView style={styles.container}>
       {/* Top Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Credit Cards</Text>
         <View style={styles.icons}>
-          <Ionicons name="funnel-outline" size={20} color="#fff" style={styles.icon} />
+          <Ionicons
+            name="funnel-outline"
+            size={20}
+            color="#fff"
+            style={styles.icon}
+            onPress={() => setSortModalVisible(true)}
+          />
           <Ionicons name="search" size={20} color="#fff" />
         </View>
       </View>
@@ -156,21 +201,7 @@ export default function CreditCards() {
         })
       )
       }
-      {/* ) : (
-        cards.map((card, index) => (
-          <View key={index} style={styles.cardBox}>
-            <Text style={styles.cardTitle}>{card.bank}</Text>
-            <Text style={styles.cardSub}>{card.cardName}</Text>
 
-            <View style={styles.billRow}>
-              <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
-              <TouchableOpacity style={styles.payNowBtn}>
-                <Text style={styles.payNowText}>Pay Now</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))
-      )} */}
 
 
       {/* Feature Shortcuts */}
@@ -183,12 +214,92 @@ export default function CreditCards() {
       <TouchableOpacity style={styles.redemptionBox}>
         <Text style={styles.redemptionText}>🎁 Check redemption options</Text>
       </TouchableOpacity>
+
+      {/* Sort Modal */}
+      {sortModalVisible && (
+        <View style={styles.sortModal}>
+          <View style={styles.sortHeader}>
+            <Text style={styles.sortTitle}>SORT BY</Text>
+            <TouchableOpacity onPress={() => setSortModalVisible(false)}>
+              <Ionicons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+
+          {[
+            "Reward Points",
+            "Due Date",
+            "Total Due Amount",
+            "A-Z Bank (Default)",
+            "A-Z Card Name"
+          ].map((option) => (
+            <TouchableOpacity
+              key={option}
+              onPress={() => {
+                setSortOption(option);
+                setSortModalVisible(false);
+                sortCardsBy(option); 
+              }}
+
+              style={styles.sortOption}
+            >
+              <Text style={[
+                styles.optionText,
+                option === sortOption && { color: '#3D5CFF', fontWeight: '700' }
+              ]}>
+                {option}
+              </Text>
+              {option === sortOption && (
+                <Ionicons name="checkmark-circle" size={20} color="#3D5CFF" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
     </ScrollView>
+      <BottomTabBar />
+    
+    </SafeAreaView>
   );
 }
 
 
 const styles = StyleSheet.create({
+
+  sortModal: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    elevation: 10,
+  },
+  sortHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  sortTitle: {
+    fontWeight: '700',
+    fontSize: 14,
+    color: '#888',
+  },
+  sortOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 0.6,
+    borderBottomColor: '#eee',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#000',
+  },
+
+
   container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
   header: {
     backgroundColor: '#1a1a2e',
@@ -328,43 +439,43 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   blurredCard: {
-  backgroundColor: '#1E1E3F99', // add transparency
-  position: 'relative',
-},
+    backgroundColor: '#1E1E3F99', // add transparency
+    position: 'relative',
+  },
 
-actionOverlay: {
-  position: 'absolute',
-  top: 20,
-  left: 0,
-  right: 0,
-  alignItems: 'center',
-  zIndex: 10,
-},
+  actionOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
 
-deleteBtn: {
-  backgroundColor: 'red',
-  paddingVertical: 8,
-  paddingHorizontal: 20,
-  borderRadius: 20,
-  marginBottom: 10,
-},
+  deleteBtn: {
+    backgroundColor: 'red',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
 
-deleteText: {
-  color: '#fff',
-  fontWeight: 'bold',
-},
+  deleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 
-cancelBtn: {
-  backgroundColor: '#ccc',
-  paddingVertical: 6,
-  paddingHorizontal: 18,
-  borderRadius: 20,
-},
+  cancelBtn: {
+    backgroundColor: '#ccc',
+    paddingVertical: 6,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+  },
 
-cancelText: {
-  color: '#000',
-  fontWeight: '600',
-},
+  cancelText: {
+    color: '#000',
+    fontWeight: '600',
+  },
 
 
 });
