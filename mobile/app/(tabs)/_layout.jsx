@@ -10,7 +10,14 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: "#0D0D2B",
           borderTopWidth: 0,
-        //   height: 1,
+            
+        },
+          tabBarLabelStyle: {
+          fontSize: 11,            // ✅ Shrinks label font
+          marginBottom: 2,
+        },
+        tabBarIconStyle: {
+          marginTop: 0,            // ✅ Reduce top margin
         },
         sceneContainerStyle: {
           backgroundColor: "#0D0D2B",  // same as your screen bg
