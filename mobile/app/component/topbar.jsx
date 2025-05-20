@@ -46,16 +46,16 @@ export default function TopBar({ screen, onFilterPress, onSearchPress }) {
             <Ionicons
               name="funnel-outline"
               size={20}
-              color="#fff"
+              color="#fff" 
               style={styles.icon}
               onPress={onFilterPress}
             />
-            <Ionicons
+            {/* <Ionicons
               name="search"
               size={20}
               color="#fff"
               onPress={onSearchPress}
-            />
+            /> */}
 
           </View>
         </>
