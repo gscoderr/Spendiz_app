@@ -1,4 +1,3 @@
-// 📁 File: app/(tabs)/creditcards.jsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -10,8 +9,12 @@ import {
   TextInput,
   Alert,
   TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+  Animated,
+  Easing,
 } from 'react-native';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../../utils/axiosInstance.js';
 import TopBar from '../component/topbar.jsx';
@@ -26,6 +29,8 @@ export default function CreditCards() {
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [sortOption, setSortOption] = useState("A-Z Bank (Default)");
   const [longPressedCardId, setLongPressedCardId] = useState(null);
+
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -79,6 +84,30 @@ export default function CreditCards() {
     }
   };
 
+  const handleScroll = () => {
+    if (sortModalVisible) setSortModalVisible(false);
+  };
+
+  const openSortModal = () => {
+    setSortModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start();
+  };
+
+  const closeSortModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setSortModalVisible(false);
+    });
+  };
+
   function Feature({ label, icon }) {
     return (
       <TouchableOpacity style={styles.feature}>
@@ -90,116 +119,124 @@ export default function CreditCards() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0D2B' }}>
-      <TopBar
-        screen="Credit"
-        onFilterPress={() => setSortModalVisible(true)}
-        onSearchPress={() => setSearchQuery("")}
-      />
-
-      <ScrollView style={styles.container}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#888" style={{ marginRight: 6 }} />
-          <TextInput
-            placeholder="Search card or bank..."
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+          <TopBar
+            screen="Credit"
+            onFilterPress={openSortModal}
+            onSearchPress={() => setSearchQuery("")}
           />
-        </View>
-
-        <View style={styles.cardsHeader}>
-          <Text style={styles.sectionTitle}>Your cards <Text style={styles.badge}>{filteredCards.length}</Text></Text>
-          <TouchableOpacity onPress={() => router.push("/screens/addcard")}> <Text style={styles.addCardLink}>+ Add card</Text></TouchableOpacity>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator color="#000" size="large" />
-        ) : filteredCards.length === 0 ? (
-          <Text style={{ color: "#888", textAlign: "center", marginTop: 20 }}>No matching cards found.</Text>
-        ) : (
-          filteredCards.map(card => {
-            const isLongPressed = longPressedCardId === card._id;
-            return (
-              <TouchableOpacity
-                key={card._id}
-                onLongPress={() => setLongPressedCardId(card._id)}
-                delayLongPress={1500}
-              >
-                <View style={[styles.cardBox, isLongPressed && styles.blurredCard]}>
-                  {!isLongPressed ? (
-                    <>
-                      <Text style={styles.cardTitle}>{card.bank}</Text>
-                      <Text style={styles.cardSub}>{card.cardName}</Text>
-                      <View style={styles.billRow}>
-                        <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
-                        <TouchableOpacity style={styles.payNowBtn}><Text style={styles.payNowText}>Pay Now</Text></TouchableOpacity>
-                      </View>
-                    </>
-                  ) : (
-                    <View style={styles.actionOverlay}>
-                      <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(card._id)}>
-                        <Text style={styles.deleteText}>Delete</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.cancelBtn} onPress={() => setLongPressedCardId(null)}>
-                        <Text style={styles.cancelText}>Cancel</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-
-        <View style={styles.featuresRow}>
-          <Feature label="Offers & Benefits" icon="percent-outline" />
-          <Feature label="Earn Rewards" icon="gift-outline" />
-          <Feature label="Settings" icon="settings-outline" />
-        </View>
-
-        <TouchableOpacity style={styles.redemptionBox}>
-          <Text style={styles.redemptionText}>🎁 Check redemption options</Text>
-        </TouchableOpacity>
-
-        {sortModalVisible && (
-  <View style={StyleSheet.absoluteFillObject}>
-    <TouchableWithoutFeedback onPress={() => setSortModalVisible(false)}>
-      <View style={styles.overlay}>
-        <TouchableWithoutFeedback>
-          <View style={styles.popupMenu}>
-            <Text style={styles.popupTitle}>Sort By</Text>
-            {[
-              "Reward Points",
-              "Due Date",
-              "Total Due Amount",
-              "A-Z Bank (Default)",
-              "A-Z Card Name"
-            ].map((option) => (
-              <TouchableOpacity
-                key={option}
-                onPress={() => {
-                  setSortOption(option);
-                  setSortModalVisible(false);
-                }}
-                style={styles.popupOption}
-              >
-                <Text style={[
-                  styles.popupOptionText,
-                  option === sortOption && { color: "#3D5CFF", fontWeight: "700" }
-                ]}>
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={18} color="#888" style={{ marginRight: 6 }} />
+            <TextInput
+              placeholder="Search card or bank..."
+              placeholderTextColor="#888"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchInput}
+            />
           </View>
-        </TouchableWithoutFeedback>
-      </View>
-    </TouchableWithoutFeedback>
-  </View>
-)}
 
-      </ScrollView>
+          <ScrollView
+            style={styles.container}
+            scrollEnabled={!sortModalVisible}
+            onScrollBeginDrag={handleScroll}
+          >
+            <View style={styles.cardsHeader}>
+              <Text style={styles.sectionTitle}>Your cards <Text style={styles.badge}>{filteredCards.length}</Text></Text>
+              <TouchableOpacity onPress={() => router.push("/screens/addcard")}>
+                <Text style={styles.addCardLink}>+ Add card</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <ActivityIndicator color="#000" size="large" />
+            ) : filteredCards.length === 0 ? (
+              <Text style={{ color: "#888", textAlign: "center", marginTop: 20 }}>No matching cards found.</Text>
+            ) : (
+              filteredCards.map(card => {
+                const isLongPressed = longPressedCardId === card._id;
+                return (
+                  <TouchableOpacity
+                    key={card._id}
+                    onLongPress={() => setLongPressedCardId(card._id)}
+                    delayLongPress={1500}
+                  >
+                    <View style={[styles.cardBox, isLongPressed && styles.blurredCard]}>
+                      {!isLongPressed ? (
+                        <>
+                          <Text style={styles.cardTitle}>{card.bank}</Text>
+                          <Text style={styles.cardSub}>{card.cardName}</Text>
+                          <View style={styles.billRow}>
+                            <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
+                            <TouchableOpacity style={styles.payNowBtn}><Text style={styles.payNowText}>Pay Now</Text></TouchableOpacity>
+                          </View>
+                        </>
+                      ) : (
+                        <View style={styles.actionOverlay}>
+                          <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(card._id)}>
+                            <Text style={styles.deleteText}>Delete</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.cancelBtn} onPress={() => setLongPressedCardId(null)}>
+                            <Text style={styles.cancelText}>Cancel</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+
+            <View style={styles.featuresRow}>
+              <Feature label="Offers & Benefits" icon="pricetags-outline" />
+              <Feature label="Earn Rewards" icon="gift-outline" />
+              <Feature label="Settings" icon="settings-outline" />
+            </View>
+
+            <TouchableOpacity style={styles.redemptionBox}>
+              <Text style={styles.redemptionText}>🎁 Check redemption options</Text>
+            </TouchableOpacity>
+          </ScrollView>
+
+          {sortModalVisible && (
+            <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+              <TouchableWithoutFeedback onPress={closeSortModal}>
+                <View style={styles.overlay}>
+                  <TouchableWithoutFeedback>
+                    <Animated.View style={styles.popupMenu}>
+                      <Text style={styles.popupTitle}>Sort By</Text>
+                      {[
+                        "Reward Points",
+                        "Due Date",
+                        "Total Due Amount",
+                        "A-Z Bank (Default)",
+                        "A-Z Card Name"
+                      ].map((option) => (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={() => {
+                            setSortOption(option);
+                            closeSortModal();
+                          }}
+                          style={styles.popupOption}
+                        >
+                          <Text style={[
+                            styles.popupOptionText,
+                            option === sortOption && { color: "#3D5CFF", fontWeight: "700" }
+                          ]}>
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </Animated.View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </Animated.View>
+          )}
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -215,44 +252,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
-  overlay: {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 9999,
-},
-
-popupMenu: {
-  position: 'absolute',
-  top: 60, // adjust as needed (below TopBar)
-  right: 16,
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 8,
-  elevation: 8,
-  width: 220,
-  zIndex: 9999,
-},
-
-popupTitle: {
-  fontWeight: 'bold',
-  marginBottom: 10,
-  color: '#333',
-},
-
-popupOption: {
-  paddingVertical: 10,
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee',
-},
-
-popupOptionText: {
-  fontSize: 16,
-  color: '#000',
-},
-
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -264,7 +263,7 @@ popupOptionText: {
     alignItems: 'center',
     marginBottom: 10,
   },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold' },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   badge: { color: '#000', paddingHorizontal: 6, borderRadius: 8 },
   addCardLink: { color: '#000', fontWeight: '600' },
   cardBox: { backgroundColor: '#2f2f4f', padding: 20, borderRadius: 16, marginBottom: 16 },
@@ -276,18 +275,48 @@ popupOptionText: {
   payNowText: { color: '#000', fontWeight: '600' },
   featuresRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
   feature: { alignItems: 'center' },
-  featureLabel: { fontSize: 12, marginTop: 4 },
+  featureLabel: { fontSize: 12, marginTop: 4, color: '#000' },
   redemptionBox: { marginTop: 20, padding: 12, borderRadius: 10, backgroundColor: '#fff' },
   redemptionText: { fontWeight: '600', color: '#000' },
-  sortModal: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, elevation: 10 },
-  sortHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  sortTitle: { fontWeight: '700', fontSize: 14, color: '#888' },
-  sortOption: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 0.6, borderBottomColor: '#eee' },
-  optionText: { fontSize: 16, color: '#000' },
   blurredCard: { backgroundColor: '#1E1E3F99', position: 'relative' },
   actionOverlay: { position: 'absolute', top: 20, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
   deleteBtn: { backgroundColor: 'red', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20, marginBottom: 10 },
   deleteText: { color: '#fff', fontWeight: 'bold' },
   cancelBtn: { backgroundColor: '#ccc', paddingVertical: 6, paddingHorizontal: 18, borderRadius: 20 },
   cancelText: { color: '#000', fontWeight: '600' },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    zIndex: 9999,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+ popupMenu: {
+  position: 'absolute',
+  top: 60,               // ✅ position below TopBar
+  right: 16,             // ✅ aligns to the right side
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 8,
+  elevation: 10,
+  width: 220,
+  zIndex: 9999,
+},
+  popupTitle: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  popupOption: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  popupOptionText: {
+    fontSize: 16,
+    color: '#000',
+  },
 });

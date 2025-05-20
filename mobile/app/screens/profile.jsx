@@ -12,7 +12,8 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useUser } from "../../context/user.context";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import HeaderBackButton from "../component/backbutton";
 export default function ProfileScreen() {
 
   const { logout, user } = useUser();
@@ -45,70 +46,73 @@ export default function ProfileScreen() {
 
 
   return (
-    <ScrollView style={styles.container}>
-      {/* User Info */}
-      <View style={styles.header}>
-        <Text style={styles.name}>{user?.name || "User"}</Text>
-        <Text style={styles.phone}>{user?.phone || "No phone number"}</Text>
-        <Text style={styles.email}>{user?.email || "No email"}</Text>
-      </View>
-      {/* Premium Banner */}
-      <View style={styles.banner}>
-        <Text style={styles.bannerTitle}>
-          Subscribe to premium & get exclusive benefits
-        </Text>
-        <TouchableOpacity style={styles.subscribeBtn}>
-          <Text style={styles.subscribeText}>Subscribe Now</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0D0D2B" }}>
+      <HeaderBackButton/>
+      <ScrollView style={styles.container}>
+        {/* User Info */}
+        <View style={styles.header}>
+          <Text style={styles.name}>{user?.name || "User"}</Text>
+          <Text style={styles.phone}>{user?.phone || "No phone number"}</Text>
+          <Text style={styles.email}>{user?.email || "No email"}</Text>
+        </View>
+        {/* Premium Banner */}
+        <View style={styles.banner}>
+          <Text style={styles.bannerTitle}>
+            Subscribe to premium & get exclusive benefits
+          </Text>
+          <TouchableOpacity style={styles.subscribeBtn}>
+            <Text style={styles.subscribeText}>Subscribe Now</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Action Items */}
-      <View style={styles.menu}>
-        <MenuItem
-          label="My Details"
-          onPress={() => router.push("/my-details")}
-          icon="person"
-        />
-        <MenuItem
-          label="Bill Payments History"
-          onPress={() => router.push("/payments")}
-          icon="document-text"
-        />
-        <MenuItem
-          label="Link Your Gmail"
-          onPress={() => router.push("/link-gmail")}
-          icon="mail"
-          actionLabel="Action Required"
-        />
-        <MenuItem label="My Buddy Details" locked icon="headset" />
-        <MenuItem
-          label="Refer and Earn"
-          onPress={() => router.push("/refer")}
-          icon="megaphone"
-        />
-        <MenuItem
-          label="Join WhatsApp Channel"
-          onPress={() => Linking.openURL("https://wa.me/yourchannel")}
-          icon="logo-whatsapp"
-        />
-        <MenuItem
-          label="Overview Video"
-          onPress={() => router.push("/overview")}
-          icon="logo-youtube"
-        />
-        <MenuItem
-          label="Share Feedback"
-          onPress={() => router.push("/feedback")}
-          icon="flag"
-        />
-      </View>
-      <TouchableOpacity
-        style={styles.logoutBtn}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Action Items */}
+        <View style={styles.menu}>
+          <MenuItem
+            label="My Details"
+            onPress={() => router.push("/my-details")}
+            icon="person"
+          />
+          <MenuItem
+            label="Bill Payments History"
+            onPress={() => router.push("/payments")}
+            icon="document-text"
+          />
+          <MenuItem
+            label="Link Your Gmail"
+            onPress={() => router.push("/link-gmail")}
+            icon="mail"
+            actionLabel="Action Required"
+          />
+          <MenuItem label="My Buddy Details" locked icon="headset" />
+          <MenuItem
+            label="Refer and Earn"
+            onPress={() => router.push("/refer")}
+            icon="megaphone"
+          />
+          <MenuItem
+            label="Join WhatsApp Channel"
+            onPress={() => Linking.openURL("https://wa.me/yourchannel")}
+            icon="logo-whatsapp"
+          />
+          <MenuItem
+            label="Overview Video"
+            onPress={() => router.push("/overview")}
+            icon="logo-youtube"
+          />
+          <MenuItem
+            label="Share Feedback"
+            onPress={() => router.push("/feedback")}
+            icon="flag"
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

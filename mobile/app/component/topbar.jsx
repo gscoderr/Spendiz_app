@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../../context/user.context.js';
 import HeaderBackButton from './backbutton.jsx';
+import { useRouter } from 'expo-router';
 
 export default function TopBar({ screen, onFilterPress, onSearchPress }) {
 
-  const navigation = useNavigation();
   const { user } = useUser();
   const userName = user?.name || "User";
+  const router = useRouter();
 
   const avatarInitials =
     userName.length === 1
@@ -22,7 +22,7 @@ export default function TopBar({ screen, onFilterPress, onSearchPress }) {
         <>
           <TouchableOpacity
             style={styles.userSection}
-            onPress={() => navigation.navigate("profile")}
+            onPress={() => router.push("/screens/profile")}
           >
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{avatarInitials}</Text>
