@@ -62,7 +62,7 @@ export default function Dashboard() {
         <View style={styles.cardSection}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.sectionTitle}>Your Cards</Text>
-            {savedCards.length > 1 && (
+            {savedCards.length >= 1 && (
               <TouchableOpacity onPress={() => router.push("/creditcards")}>
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
@@ -104,7 +104,7 @@ export default function Dashboard() {
               key={category}
               style={styles.categoryItem}
               onPress={() =>
-                router.push({ pathname: "/subcategory", params: { category } })
+                router.push({ pathname: "/screens/subcategory", params: { category } })
               }
             >
               <View style={styles.iconCircle}>
