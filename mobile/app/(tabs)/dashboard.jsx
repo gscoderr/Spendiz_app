@@ -12,6 +12,7 @@ import {
 import { useUser } from "../../context/user.context.js";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TopBar from "../component/topbar.jsx";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -73,7 +74,14 @@ export default function Dashboard() {
                 <Text style={styles.cardType}>{savedCards[0].cardName}</Text>
               </View>
 
-              <View style={styles.cardChip} />
+              {/* <View style={styles.cardChip} /> */}
+
+              <LinearGradient
+                colors={["#d9d9d9", "#a1a1a1", "#e6e6e6"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.cardChip}
+              />
 
               <Text style={styles.last4}>
                 •••• •••• •••• {savedCards[0].last4Digits}
@@ -98,35 +106,6 @@ export default function Dashboard() {
             </View>
           )}
         </View>
-
-        {/* <View style={styles.categoryContainer}>
-          <Text style={styles.sectionTitle}>Spend Category</Text>
-
-          <View style={styles.categoryPillRow}>
-            {[
-              { label: "Dining", icon: "🍴", category: "dining" },
-              { label: "Shopping", icon: "🛍️", category: "shopping" },
-              { label: "Travel", icon: "✈️", category: "travel" },
-              { label: "Entertainment", icon: "🎬", category: "entertainment" },
-              { label: "Fuel", icon: "⛽", category: "fuel" },
-              { label: "Grocery", icon: "🛒", category: "grocery" },
-            ].map(({ label, icon, category }) => (
-              <TouchableOpacity
-                key={category}
-                style={styles.categoryPill}
-                onPress={() =>
-                  router.push({
-                    pathname: "/screens/subcategory",
-                    params: { category },
-                  })
-                }
-              >
-                <Text style={styles.pillIcon}>{icon}</Text>
-                <Text style={styles.pillLabel}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View> */}
 
         <View style={styles.categoryContainer}>
           <Text style={styles.sectionTitle}>Spend Category</Text>
@@ -273,6 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#cccccc",
     marginBottom: 20,
   },
+  
 
   last4: {
     color: "#ccc",
@@ -337,13 +317,13 @@ const styles = StyleSheet.create({
   },
   networkLogoWrapper: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: 5,
+    right: 7,
   },
 
   networkLogo: {
-    width: 150,
-    height: 70,
+    width: 90,
+    height: 50,
   },
   categoryRow: {
     flexDirection: "row",
@@ -410,37 +390,36 @@ const styles = StyleSheet.create({
   },
 
   categoryGrid: {
-  flexDirection: "row",
-  flexWrap: "wrap",
-  justifyContent: "space-between",
-  marginTop: 12,
-  rowGap: 24,
-},
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 12,
+    rowGap: 24,
+  },
 
-categoryIconBox: {
-  width: "28%",
-  alignItems: "center",
-},
+  categoryIconBox: {
+    width: "28%",
+    alignItems: "center",
+  },
 
-categoryIconCircle: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: "#eef0ff",
-  justifyContent: "center",
-  alignItems: "center",
-  marginBottom: 8,
-},
+  categoryIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#eef0ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
 
-iconEmoji: {
-  fontSize: 24,
-},
+  iconEmoji: {
+    fontSize: 24,
+  },
 
-categoryLabel: {
-  fontSize: 13,
-  fontWeight: "500",
-  color: "#000",
-  textAlign: "center",
-},
-
+  categoryLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#000",
+    textAlign: "center",
+  },
 });

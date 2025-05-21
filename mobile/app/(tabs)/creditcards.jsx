@@ -12,13 +12,15 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Animated,
-  Easing, Image
+  Easing,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import api from "../../utils/axiosInstance.js";
 import TopBar from "../component/topbar.jsx";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function CreditCards() {
   const router = useRouter();
@@ -182,7 +184,13 @@ export default function CreditCards() {
                           <Text style={styles.cardName}>{card.cardName}</Text>
                         </View>
 
-                        <View style={styles.chip} />
+                        {/* <View style={styles.chip} /> */}
+                        <LinearGradient
+                          colors={["#d9d9d9", "#a1a1a1", "#e6e6e6"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.cardChip}
+                        />
 
                         <View style={styles.cardNumber}>
                           <Text style={styles.dots}>•••• •••• ••••</Text>
@@ -196,11 +204,11 @@ export default function CreditCards() {
                         </Text>
                         <View style={styles.networkLogoWrapper}>
                           <Image
-                           source={
-  card.network?.toLowerCase() === "visa"
-    ? require("../../assets/banks/visa_sign.png")
-    : require("../../assets/banks/master_card.png")
-}
+                            source={
+                              card.network?.toLowerCase() === "visa"
+                                ? require("../../assets/banks/visa_sign.png")
+                                : require("../../assets/banks/master_card.png")
+                            }
                             style={styles.networkLogo}
                             resizeMode="contain"
                           />
@@ -411,13 +419,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  chip: {
-    width: 40,
-    height: 30,
-    borderRadius: 6,
-    backgroundColor: "#cccccc",
-    marginBottom: 20,
-  },
+  cardChip: {
+  width: 48,
+  height: 32,
+  borderRadius: 6,
+  marginBottom: 20,
+  elevation: 4, // for subtle shadow on Android
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+},
 
   cardNumber: {
     flexDirection: "row",
@@ -504,12 +516,12 @@ const styles = StyleSheet.create({
   },
   networkLogoWrapper: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: 5,
+    right: 7,
   },
 
   networkLogo: {
-    width: 150,
-    height: 70,
+    width: 90,
+    height: 50,
   },
 });
