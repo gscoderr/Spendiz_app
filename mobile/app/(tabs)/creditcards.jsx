@@ -86,6 +86,7 @@ export default function CreditCards() {
 
   const handleScroll = () => {
     if (sortModalVisible) setSortModalVisible(false);
+    
   };
 
   const openSortModal = () => {
@@ -158,32 +159,36 @@ export default function CreditCards() {
                 const isLongPressed = longPressedCardId === card._id;
                 return (
                   <TouchableOpacity
-                    key={card._id}
-                    onLongPress={() => setLongPressedCardId(card._id)}
-                    delayLongPress={1500}
-                  >
-                    <View style={[styles.cardBox, isLongPressed && styles.blurredCard]}>
-                      {!isLongPressed ? (
-                        <>
-                          <Text style={styles.cardTitle}>{card.bank}</Text>
-                          <Text style={styles.cardSub}>{card.cardName}</Text>
-                          <View style={styles.billRow}>
-                            <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
-                            <TouchableOpacity style={styles.payNowBtn}><Text style={styles.payNowText}>Pay Now</Text></TouchableOpacity>
-                          </View>
-                        </>
-                      ) : (
-                        <View style={styles.actionOverlay}>
-                          <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(card._id)}>
-                            <Text style={styles.deleteText}>Delete</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.cancelBtn} onPress={() => setLongPressedCardId(null)}>
-                            <Text style={styles.cancelText}>Cancel</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
+  key={card._id}
+  onLongPress={() => setLongPressedCardId(card._id)}
+  delayLongPress={800}
+>
+  <View style={{ position: 'relative' }}>
+    <View style={styles.cardBox}>
+      <Text style={styles.cardTitle}>{card.bank}</Text>
+      <Text style={styles.cardSub}>{card.cardName}</Text>
+      <View style={styles.billRow}>
+        <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
+        <TouchableOpacity style={styles.payNowBtn}>
+          <Text style={styles.payNowText}>Pay Now</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+
+    {longPressedCardId === card._id && (
+      <View style={styles.backdrop}>
+        <View style={styles.actionOverlay}>
+          <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(card._id)}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => setLongPressedCardId(null)}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )}
+  </View>
+</TouchableOpacity>
                 );
               })
             )}
@@ -279,21 +284,7 @@ const styles = StyleSheet.create({
   redemptionBox: { marginTop: 20, padding: 12, borderRadius: 10, backgroundColor: '#fff' },
   redemptionText: { fontWeight: '600', color: '#000' },
   blurredCard: { backgroundColor: '#1E1E3F99', position: 'relative' },
-  actionOverlay: { position: 'absolute', top: 20, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
-  deleteBtn: { backgroundColor: 'red', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20, marginBottom: 10 },
-  deleteText: { color: '#fff', fontWeight: 'bold' },
-  cancelBtn: { backgroundColor: '#ccc', paddingVertical: 6, paddingHorizontal: 18, borderRadius: 20 },
-  cancelText: { color: '#000', fontWeight: '600' },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    zIndex: 9999,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  
  popupMenu: {
   position: 'absolute',
   top: 60,               // ✅ position below TopBar
@@ -319,4 +310,90 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
+
+  cardBox: {
+  backgroundColor: '#1E1D42',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 20,
+},
+
+billRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: 12,
+},
+
+payNowBtn: {
+  backgroundColor: '#fff',
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 20,
+},
+
+payNowText: {
+  color: '#000',
+  fontWeight: 'bold',
+},
+
+cardTitle: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
+cardSub: {
+  color: '#ccc',
+  marginTop: 4,
+},
+
+billText: {
+  color: '#ccc',
+},
+
+// 👇 Overlay & Button Styles
+
+backdrop: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 999,
+  borderRadius: 12,
+},
+
+actionOverlay: {
+  backgroundColor: '#fff',
+  padding: 20,
+  borderRadius: 12,
+  alignItems: 'center',
+  elevation: 10,
+},
+
+deleteBtn: {
+  backgroundColor: 'red',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 20,
+  marginBottom: 10,
+},
+
+deleteText: {
+  color: '#fff',
+  fontWeight: 'bold',
+},
+
+cancelBtn: {
+  backgroundColor: '#ccc',
+  paddingVertical: 8,
+  paddingHorizontal: 18,
+  borderRadius: 20,
+},
+
+cancelText: {
+  color: '#000',
+  fontWeight: '600',
+},
+
 });

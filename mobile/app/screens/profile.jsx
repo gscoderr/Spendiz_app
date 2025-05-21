@@ -134,7 +134,7 @@ const MenuItem = ({ label, onPress, icon, actionLabel, locked }) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D2B", padding: 20, paddingTop: 60 },
+  container: { flex: 1, backgroundColor: "#0D0D2B", padding: 20, paddingTop: 10 },
   header: { marginBottom: 20 },
   name: { fontSize: 24, fontWeight: "bold", color: "#fff" },
   phone: { fontSize: 16, color: "#fff" },
