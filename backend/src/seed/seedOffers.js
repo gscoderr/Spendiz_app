@@ -3,7 +3,7 @@ import fs from "fs";
 import CardOffer from "../models/cardoffers.model.js";
 
 
-const MONGO_URI = "mongodb+srv://gorvindcode:8BQOS6zSsqulaSpendiz@cluster0.sueniyy.mongodb.net/spendizDB?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = "";
 
 
 const run = async () => {
