@@ -24,6 +24,8 @@ export default function Welcome() {
   const router = useRouter();
 
   const handleGetStarted = async () => {
+
+    console.log("Phone Number:", phone);
     if (phone.length !== 10) {
       Alert.alert('Invalid Number', 'Please enter a valid 10-digit phone number');
       return;
@@ -37,7 +39,7 @@ export default function Welcome() {
         phone,
       });
 
-
+      console.log("OTP Send Response:", response.data);
 
       if (response.data.success) {
         Alert.alert('Success', response.data.message || 'OTP sent successfully');
@@ -47,6 +49,7 @@ export default function Welcome() {
         Alert.alert('Failed', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
+      console.log("Error:", error);
       console.error("OTP Send Error:", error?.response?.data || error.message);
 
       let backendMessage = "Something went wrong while sending OTP";
