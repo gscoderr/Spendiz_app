@@ -73,4 +73,24 @@ export const getUserCards = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, cards, "User cards fetched"));
 });
 
+export const deleteCard = asyncHandler(async (req, res) => {
+  const cardId = req.params.id;
+  const userId = req.user?._id;
+
+  if (!cardId) {
+    throw new ApiError(400, "Card ID is required");
+  }
+
+  const card = await Card.findOne({ _id: cardId, userId });
+
+  if (!card) {
+    throw new ApiError(404, "Card not found or unauthorized");
+  }
+
+  await Card.deleteOne({ _id: cardId });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Card deleted successfully"));
+});
 
