@@ -160,6 +160,7 @@ export default function CategoryForm() {
       });
 
       // Step 4: Log full response
+      console.log("📦 API Response:", res.data) ;
 
       if (res.data.success && res.data.bestCards) {
         setBestCard(res.data.bestCards);
