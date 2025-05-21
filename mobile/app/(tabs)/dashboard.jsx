@@ -18,6 +18,7 @@ export default function Dashboard() {
   const { user } = useUser();
   const userName = user?.name || "User";
   const [savedCards, setSavedCards] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -45,8 +46,6 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        
-
         <View style={styles.cardSection}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.sectionTitle}>Your Cards</Text>
@@ -69,39 +68,102 @@ export default function Dashboard() {
             </TouchableOpacity>
           ) : (
             <View style={styles.cardBox}>
-              <Text style={styles.bank}>{savedCards[0].bank}</Text>
-              <Text style={styles.last4}>•••• {savedCards[0].last4Digits}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.bank}>{savedCards[0].bank}</Text>
+                <Text style={styles.cardType}>{savedCards[0].cardName}</Text>
+              </View>
+
+              <View style={styles.cardChip} />
+
+              <Text style={styles.last4}>
+                •••• •••• •••• {savedCards[0].last4Digits}
+              </Text>
               <Text style={styles.holder}>{savedCards[0].cardHolderName}</Text>
+
               <TouchableOpacity style={styles.payNowBtn}>
-                <Text style={styles.payNowText}>Pay Now</Text>
+                {/* <Text style={styles.payNowText}>Pay Now</Text> */}
               </TouchableOpacity>
+
+              <View style={styles.networkLogoWrapper}>
+                <Image
+                  source={
+                    savedCards[0].network === "Visa"
+                      ? require("../../assets/banks/visa_sign.png")
+                      : require("../../assets/banks/master_card.png")
+                  }
+                  style={styles.networkLogo}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
           )}
         </View>
 
+        {/* <View style={styles.categoryContainer}>
+          <Text style={styles.sectionTitle}>Spend Category</Text>
+
+          <View style={styles.categoryPillRow}>
+            {[
+              { label: "Dining", icon: "🍴", category: "dining" },
+              { label: "Shopping", icon: "🛍️", category: "shopping" },
+              { label: "Travel", icon: "✈️", category: "travel" },
+              { label: "Entertainment", icon: "🎬", category: "entertainment" },
+              { label: "Fuel", icon: "⛽", category: "fuel" },
+              { label: "Grocery", icon: "🛒", category: "grocery" },
+            ].map(({ label, icon, category }) => (
+              <TouchableOpacity
+                key={category}
+                style={styles.categoryPill}
+                onPress={() =>
+                  router.push({
+                    pathname: "/screens/subcategory",
+                    params: { category },
+                  })
+                }
+              >
+                <Text style={styles.pillIcon}>{icon}</Text>
+                <Text style={styles.pillLabel}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View> */}
+
         <View style={styles.categoryContainer}>
           <Text style={styles.sectionTitle}>Spend Category</Text>
 
-          {[
-            { label: "Dining", icon: "🍴", category: "dining" },
-            { label: "Shopping", icon: "🛍️", category: "shopping" },
-            { label: "Travel", icon: "✈️", category: "travel" },
-            { label: "Entertainment", icon: "🎬", category: "entertainment" },
-          ].map(({ label, icon, category }) => (
-            <TouchableOpacity
-              key={category}
-              style={styles.categoryItem}
-              onPress={() =>
-                router.push({ pathname: "/screens/subcategory", params: { category } })
-              }
-            >
-              <View style={styles.iconCircle}>
-                <Text style={styles.icon}>{icon}</Text>
-              </View>
-              <Text style={styles.label}>{label}</Text>
-              <Text style={styles.arrow}>›</Text>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.categoryGrid}>
+            {[
+              { label: "Dining", icon: "🍴", category: "dining" },
+              { label: "Shopping", icon: "🛍️", category: "shopping" },
+              { label: "Travel", icon: "✈️", category: "travel" },
+              { label: "Entertainment", icon: "🎬", category: "entertainment" },
+              { label: "Fuel", icon: "⛽", category: "fuel" },
+              { label: "Grocery", icon: "🛒", category: "grocery" },
+              // { label: "EMI", icon: "💸", category: "emi" },
+              // { label: "Fuel", icon: "⛽", category: "fuel" },
+              // { label: "Government", icon: "🏛️", category: "government" },
+              // { label: "Jewellery", icon: "💎", category: "jewellery" },
+              // { label: "Rent", icon: "🏠", category: "rent" },
+              // { label: "Utilities", icon: "🔌", category: "utilities" },
+              // { label: "Wallets", icon: "👛", category: "wallets" },
+            ].map(({ label, icon, category }) => (
+              <TouchableOpacity
+                key={category}
+                style={styles.categoryIconBox}
+                onPress={() =>
+                  router.push({
+                    pathname: "/screens/subcategory",
+                    params: { category },
+                  })
+                }
+              >
+                <View style={styles.categoryIconCircle}>
+                  <Text style={styles.iconEmoji}>{icon}</Text>
+                </View>
+                <Text style={styles.categoryLabel}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -177,18 +239,66 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 12,
   },
-  bank: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  last4: { color: "#ccc", fontSize: 14, marginTop: 4 },
-  holder: { color: "#fff", fontSize: 14, marginTop: 6 },
-  payNowBtn: {
-    backgroundColor: "#fff",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    marginTop: 10,
+  cardBox: {
+    backgroundColor: "#1B3C73", // solid dark blue
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    width: "100%",
   },
-  payNowText: { color: "#000", fontWeight: "600" },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+
+  bank: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
+  cardType: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  cardChip: {
+    width: 40,
+    height: 30,
+    borderRadius: 6,
+    backgroundColor: "#cccccc",
+    marginBottom: 20,
+  },
+
+  last4: {
+    color: "#ccc",
+    fontSize: 16,
+    marginTop: 4,
+  },
+
+  holder: {
+    color: "#fff",
+    fontSize: 20,
+    marginTop: 6,
+  },
+
+  // payNowBtn: {
+  //   backgroundColor: "#fff",
+  //   paddingVertical: 8,
+  //   paddingHorizontal: 16,
+  //   borderRadius: 20,
+  //   alignSelf: "flex-start",
+  //   marginTop: 10,
+  // },
+
+  // payNowText: {
+  //   color: "#000",
+  //   fontWeight: "600",
+  // },
 
   addCard: {
     backgroundColor: "#1E1E3F",
@@ -210,25 +320,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 20,
   },
-  categoryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  iconCircle: {
-    backgroundColor: "#f0f0ff",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  icon: { fontSize: 20 },
-  label: { flex: 1, fontSize: 16, fontWeight: "500" },
-  arrow: { fontSize: 22, color: "#888" },
 
   askSavvy: {
     position: "absolute",
@@ -244,4 +335,112 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+  networkLogoWrapper: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+  },
+
+  networkLogo: {
+    width: 150,
+    height: 70,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+
+  categoryPill: {
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+
+  selectedPill: {
+    backgroundColor: "#3D5CFF",
+  },
+
+  pillText: {
+    fontWeight: "600",
+    color: "#000",
+  },
+
+  offerScroll: {
+    marginTop: 16,
+  },
+
+  offerCard: {
+    backgroundColor: "#f7f9ff",
+    padding: 16,
+    borderRadius: 12,
+    marginRight: 12,
+    minWidth: 180,
+    elevation: 2,
+  },
+
+  offerCardBank: {
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#1B3C73",
+  },
+
+  offerCardName: {
+    fontSize: 13,
+    marginTop: 4,
+    color: "#333",
+  },
+
+  offerCardPerk: {
+    fontSize: 12,
+    marginTop: 6,
+    color: "#555",
+  },
+
+  categoryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f4f4f4",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+
+  categoryGrid: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  marginTop: 12,
+  rowGap: 24,
+},
+
+categoryIconBox: {
+  width: "28%",
+  alignItems: "center",
+},
+
+categoryIconCircle: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: "#eef0ff",
+  justifyContent: "center",
+  alignItems: "center",
+  marginBottom: 8,
+},
+
+iconEmoji: {
+  fontSize: 24,
+},
+
+categoryLabel: {
+  fontSize: 13,
+  fontWeight: "500",
+  color: "#000",
+  textAlign: "center",
+},
+
 });

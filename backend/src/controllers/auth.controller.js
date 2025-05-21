@@ -66,7 +66,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 // ==============================================================================
 export const sendOtp = asyncHandler(async (req, res) => {
   const { phone } = req.body;
-
+ console.log(phone)
   if (!phone) {
     throw new ApiError(400, "Phone number is required");
   }

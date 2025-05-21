@@ -210,7 +210,7 @@ export default function CategoryForm() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D2B" },
+  container: { flex: 1, backgroundColor: "#0D0D2B", paddingTop: 40, },
   form: { padding: 20 },
   title: {
     color: "#fff",
