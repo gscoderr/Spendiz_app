@@ -45,19 +45,7 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.rewardBox}>
-          <Text style={styles.points}>0 Points</Text>
-          <Text style={styles.subText}>Fetch your reward points</Text>
-          <TouchableOpacity style={styles.gmailButton}>
-            <Text style={styles.gmailText}>Connect Gmail</Text>
-            <Image
-              source={{
-                uri: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png",
-              }}
-              style={styles.gmailIcon}
-            />
-          </TouchableOpacity>
-        </View>
+        
 
         <View style={styles.cardSection}>
           <View style={styles.cardHeaderRow}>

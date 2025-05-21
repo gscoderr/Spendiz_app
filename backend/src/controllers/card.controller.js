@@ -2,8 +2,8 @@
 import Card from '../models/card.model.js';
 import MasterCard from '../models/mastercards.model.js'; // Just to read dropdown values
 import { asyncHandler } from '../utils/asyncHandler.js';
-import {ApiError} from '../utils/ApiError.js';
-import {ApiResponse} from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
 
 export const addCard = asyncHandler(async (req, res) => {
   const { bank, cardName, network, tier, last4Digits, cardHolderName } = req.body;
@@ -13,12 +13,12 @@ export const addCard = asyncHandler(async (req, res) => {
   }
 
 
-const exists = await Card.findOne({
-  userId: req.user._id,
-  bank,
-  cardName,
-  last4Digits
-});
+  const exists = await Card.findOne({
+    userId: req.user._id,
+    bank,
+    cardName,
+    last4Digits
+  });
 
   if (exists) {
     throw new ApiError(409, "This card already exists in your account.");
@@ -42,8 +42,6 @@ export const getBanks = asyncHandler(async (req, res) => {
 
   return res.status(200).json(banks);
 });
-
-
 
 
 export const getCardNames = asyncHandler(async (req, res) => {
@@ -75,3 +73,89 @@ export const getUserCards = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, cards, "User cards fetched"));
 });
 
+
+export const matchBestCard = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { category, subCategory, amount } = req.query;
+
+  if (!userId) throw new ApiError(401, "Unauthorized");
+  if (!category || !subCategory || !amount) {
+    throw new ApiError(400, "category, subCategory, and amount are required");
+  }
+
+  console.log("🚀 /match/best-card route hit");
+  console.log("👉 Query Params:", req.query);
+  console.log("🔐 User ID:", req.user?._id);
+  
+  const spendAmount = parseFloat(amount);
+  if (isNaN(spendAmount) || spendAmount <= 0) {
+    throw new ApiError(400, "Invalid spend amount");
+  }
+
+  const userCards = await Card.find({ userId });
+  if (!userCards.length) throw new ApiError(404, "No cards saved by user");
+
+  const masterCards = await MasterCard.find();
+  if (!masterCards.length) throw new ApiError(500, "MasterCard data not available");
+
+  const matches = [];
+
+  for (const userCard of userCards) {
+    const matchedMaster = masterCards.find(
+      (m) =>
+        m.bank?.toLowerCase().trim() === userCard.bank?.toLowerCase().trim() &&
+        m.cardName?.toLowerCase().trim() === userCard.cardName?.toLowerCase().trim()
+    );
+
+    if (!matchedMaster || !matchedMaster[category]) continue;
+
+    const matchedOffers = matchedMaster[category].filter(
+      (offer) =>
+        offer.subCategory?.toLowerCase().trim() === subCategory?.toLowerCase().trim()
+    );
+
+    if (!matchedOffers.length) continue;
+
+    const offer = matchedOffers[0];
+    const rewardType = typeof offer.cashback === "number" ? "cashback" : "reward";
+    const rate = offer.cashback ?? offer.rewardRate ?? 0;
+
+    const rawBenefit = (spendAmount * rate) / 100;
+
+    const benefitValue =
+      rewardType === "cashback"
+        ? Math.min(rawBenefit, offer.maxLimitCashback || rawBenefit)
+        : Math.min(rawBenefit, offer.maxLimitRewardPoints || rawBenefit);
+
+    matches.push({
+      cardName: matchedMaster.cardName,
+      bank: matchedMaster.bank,
+      rewardType,
+      cashback: offer.cashback,
+      rewardRate: offer.rewardRate,
+      benefitValue,
+      loungeAccess: matchedMaster.loungeAccess,
+      fuelBenefit: matchedMaster.fuelBenefit,
+      milestone: matchedMaster.milestone,
+      otherPerks: matchedMaster.otherPerks,
+      tnc: matchedMaster.tnc,
+      remarks: matchedMaster.remarks,
+    });
+  }
+
+  if (!matches.length) {
+    throw new ApiError(404, "No matching card offers found");
+  }
+
+  const bestCard = matches.reduce((a, b) =>
+    a.benefitValue > b.benefitValue ? a : b
+  );
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { bestCard, allMatches: matches },
+      "Best card match found"
+    )
+  );
+});

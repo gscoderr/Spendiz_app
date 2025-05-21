@@ -4,225 +4,92 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
+  StatusBar,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
 import {
   FontAwesome5,
   MaterialCommunityIcons,
   Ionicons,
 } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+
+import TopBar from "../component/topbar";
+import HandlerBackButton from "../component/backbutton";
 
 export default function SubCategory() {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { category } = route.params;
+  const router = useRouter();
+  const { category } = useLocalSearchParams();
+
+  const formattedCategoryName =
+    category.charAt(0).toUpperCase() + category.slice(1);
 
   const subCategories = {
     shopping: [
-      {
-        label: "Online Shopping",
-        icon: (
-          <FontAwesome5 name="shopping-cart" size={32} color="#6A5AE0" />
-        ),
-      },
-      {
-        label: "Offline Shopping",
-        icon: (
-          <MaterialCommunityIcons
-            name="storefront"
-            size={32}
-            color="#F4B400"
-          />
-        ),
-      },
-      {
-        label: "Fashion & Lifestyle",
-        icon: (
-          <FontAwesome5 name="tshirt" size={32} color="#6A5AE0" />
-        ),
-      },
-      {
-        label: "Electronics",
-        icon: (
-          <FontAwesome5 name="mobile-alt" size={32} color="#F4B400" />
-        ),
-      },
+      { label: "Online Shopping", icon: <FontAwesome5 name="shopping-cart" size={32} color="#6A5AE0" /> },
+      { label: "Offline Shopping", icon: <MaterialCommunityIcons name="storefront" size={32} color="#F4B400" /> },
+      { label: "Fashion & Lifestyle", icon: <FontAwesome5 name="tshirt" size={32} color="#6A5AE0" /> },
+      { label: "Electronics", icon: <FontAwesome5 name="mobile-alt" size={32} color="#F4B400" /> },
     ],
     dining: [
-      {
-        label: "Restaurant",
-        icon: (
-          <MaterialCommunityIcons
-            name="silverware-fork-knife"
-            size={32}
-            color="#6A5AE0"
-          />
-        ),
-      },
-      {
-        label: "Quick Bites",
-        icon: (
-          <MaterialCommunityIcons name="hamburger" size={32} color="#F4B400" />
-        ),
-      },
-      {
-        label: "Café",
-        icon: (
-          <MaterialCommunityIcons name="coffee" size={32} color="#6A5AE0" />
-        ),
-      },
-      {
-        label: "Food Delivery",
-        icon: (
-          <MaterialCommunityIcons
-            name="bike-fast"
-            size={32}
-            color="#F4B400"
-          />
-        ),
-      },
+      { label: "Restaurant", icon: <MaterialCommunityIcons name="silverware-fork-knife" size={32} color="#6A5AE0" /> },
+      { label: "Quick Bites", icon: <MaterialCommunityIcons name="hamburger" size={32} color="#F4B400" /> },
+      { label: "Café", icon: <MaterialCommunityIcons name="coffee" size={32} color="#6A5AE0" /> },
+      { label: "Food Delivery", icon: <MaterialCommunityIcons name="bike-fast" size={32} color="#F4B400" /> },
     ],
     travel: [
-      {
-        label: "Flights",
-        icon: (
-          <MaterialCommunityIcons name="airplane" size={32} color="#6A5AE0" />
-        ),
-      },
-      {
-        label: "Trains",
-        icon: (
-          <MaterialCommunityIcons name="train" size={32} color="#F4B400" />
-        ),
-      },
-      {
-        label: "Metro",
-        icon: (
-          <MaterialCommunityIcons
-            name="subway-variant"
-            size={32}
-            color="#6A5AE0"
-          />
-        ),
-      },
-      {
-        label: "Cab Services",
-        icon: (
-          <MaterialCommunityIcons name="taxi" size={32} color="#F4B400" />
-        ),
-      },
-      {
-        label: "Hotels",
-        icon: (
-          <MaterialCommunityIcons name="hotel" size={32} color="#6A5AE0" />
-        ),
-      },
+      { label: "Flights", icon: <MaterialCommunityIcons name="airplane" size={32} color="#6A5AE0" /> },
+      { label: "Trains", icon: <MaterialCommunityIcons name="train" size={32} color="#F4B400" /> },
+      { label: "Metro", icon: <MaterialCommunityIcons name="subway-variant" size={32} color="#6A5AE0" /> },
+      { label: "Cab Services", icon: <MaterialCommunityIcons name="taxi" size={32} color="#F4B400" /> },
+      { label: "Hotels", icon: <MaterialCommunityIcons name="hotel" size={32} color="#6A5AE0" /> },
     ],
     entertainment: [
-      {
-        label: "Movies",
-        icon: (
-          <MaterialCommunityIcons
-            name="movie-open"
-            size={32}
-            color="#6A5AE0"
-          />
-        ),
-      },
-      {
-        label: "Events",
-        icon: (
-          <MaterialCommunityIcons
-            name="calendar-star"
-            size={32}
-            color="#F4B400"
-          />
-        ),
-      },
-      {
-        label: "Gaming",
-        icon: (
-          <MaterialCommunityIcons
-            name="gamepad-variant"
-            size={32}
-            color="#6A5AE0"
-          />
-        ),
-      },
-      {
-        label: "OTT",
-        icon: (
-          <MaterialCommunityIcons
-            name="television-classic"
-            size={32}
-            color="#F4B400"
-          />
-        ),
-      },
+      { label: "Movies", icon: <MaterialCommunityIcons name="movie-open" size={32} color="#6A5AE0" /> },
+      { label: "Events", icon: <MaterialCommunityIcons name="calendar-star" size={32} color="#F4B400" /> },
+      { label: "Gaming", icon: <MaterialCommunityIcons name="gamepad-variant" size={32} color="#6A5AE0" /> },
+      { label: "OTT", icon: <MaterialCommunityIcons name="television-classic" size={32} color="#F4B400" /> },
     ],
   };
 
   const handlePress = (subCategoryLabel) => {
-    let targetScreen = "";
-
-    switch (category) {
-      case "travel":
-        targetScreen = "travelform";
-        break;
-      case "shopping":
-        targetScreen = "shoppingform";
-        break;
-      case "dining":
-        targetScreen = "diningform";
-        break;
-      case "entertainment":
-        targetScreen = "entertainmentform";
-        break;
-      default:
-        targetScreen = "form"; // fallback
-    }
-
-    navigation.navigate(targetScreen, {
-      category,
-      subCategory: subCategoryLabel,
+    router.push({
+      pathname: "/screens/categoryform",
+      params: {
+        category,
+        subCategory: subCategoryLabel,
+      },
     });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Back Arrow */}
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
+      <TopBar screen={formattedCategoryName} />
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
+        <Text style={styles.heading}>Choose Sub-Category</Text>
       </View>
 
-      <Text style={styles.title}>SPEND CATEGORY</Text>
-      <Text style={styles.heading}>Choose Sub-Category</Text>
-
-      <ScrollView contentContainerStyle={styles.grid}>
-        {subCategories[category]?.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.card}
-            onPress={() => handlePress(item.label)}
-          >
-            {item.icon}
-            <Text style={styles.cardText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Close Button */}
-      <TouchableOpacity
-        style={styles.closeBtn}
-        onPress={() => navigation.goBack()}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.closeText}>Close</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        <View style={styles.grid}>
+          {subCategories[category]?.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.card}
+              onPress={() => handlePress(item.label)}
+            >
+              {item.icon}
+              <Text style={styles.cardText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -230,67 +97,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0D0D2B",
-    paddingTop: 60,
+    paddingTop: 35,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#fff",
-    textAlign: "center",
-    letterSpacing: 1,
-    marginBottom: 4,
+    marginTop: 12,
+    alignItems: "center",
+    marginBottom: 16,
   },
   heading: {
     fontSize: 20,
     fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 24,
-    color: "#fff",
+    color: "#FFFFFF",
+  },
+  scrollContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "center",
-    paddingBottom: 100,
+    justifyContent: "space-between",
   },
   card: {
-    width: 140,
-    height: 140,
+    width: "47%",
+    aspectRatio: 1,
     backgroundColor: "#fff",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    padding: 14,
-    margin: 10,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowOffset: { width: 2, height: 2 },
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 4,
   },
   cardText: {
     fontSize: 14,
     fontWeight: "600",
     marginTop: 10,
     textAlign: "center",
-  },
-  closeBtn: {
-    position: "absolute",
-    bottom: 30,
-    left: 20,
-    right: 20,
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  closeText: {
-    color: "#000",
-    fontSize: 16,
-    textAlign: "center",
-    fontWeight: "600",
+    color: "#333",
   },
 });

@@ -46,20 +46,22 @@ export default function TopBar({ screen, onFilterPress, onSearchPress }) {
             <Ionicons
               name="funnel-outline"
               size={20}
-              color="#fff" 
+              color="#fff"
               style={styles.icon}
               onPress={onFilterPress}
             />
-            {/* <Ionicons
-              name="search"
-              size={20}
-              color="#fff"
-              onPress={onSearchPress}
-            /> */}
 
           </View>
         </>
       )}
+
+      {screen !== "Dashboard" && screen !== "Credit" && (
+        <>
+          <HeaderBackButton />
+          <Text style={styles.pageTitle}>{screen}</Text>
+        </>
+      )}
+
     </View>
   );
 }
@@ -79,6 +81,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
+  pageTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginLeft: 12,
+  },
+
   avatar: {
     backgroundColor: "#F2C6D1",
     width: 40,
