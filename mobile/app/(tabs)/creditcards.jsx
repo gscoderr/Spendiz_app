@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,13 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Animated,
-  Easing,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import api from '../../utils/axiosInstance.js';
-import TopBar from '../component/topbar.jsx';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  Easing, Image
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import api from "../../utils/axiosInstance.js";
+import TopBar from "../component/topbar.jsx";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CreditCards() {
   const router = useRouter();
@@ -47,9 +47,10 @@ export default function CreditCards() {
   }, []);
 
   useEffect(() => {
-    const filtered = cards.filter(card =>
-      card.cardName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.bank.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = cards.filter(
+      (card) =>
+        card.cardName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        card.bank.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     let sorted = [...filtered];
@@ -75,7 +76,7 @@ export default function CreditCards() {
   const handleDelete = async (cardId) => {
     try {
       await api.delete(`/cards/${cardId}`);
-      setCards(prev => prev.filter(c => c._id !== cardId));
+      setCards((prev) => prev.filter((c) => c._id !== cardId));
       setLongPressedCardId(null);
       Alert.alert("Deleted", "Card removed successfully");
     } catch (err) {
@@ -86,7 +87,6 @@ export default function CreditCards() {
 
   const handleScroll = () => {
     if (sortModalVisible) setSortModalVisible(false);
-    
   };
 
   const openSortModal = () => {
@@ -119,7 +119,7 @@ export default function CreditCards() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0D2B' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0D0D2B" }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <TopBar
@@ -128,7 +128,12 @@ export default function CreditCards() {
             onSearchPress={() => setSearchQuery("")}
           />
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={18} color="#888" style={{ marginRight: 6 }} />
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={{ marginRight: 6 }}
+            />
             <TextInput
               placeholder="Search card or bank..."
               placeholderTextColor="#888"
@@ -144,7 +149,10 @@ export default function CreditCards() {
             onScrollBeginDrag={handleScroll}
           >
             <View style={styles.cardsHeader}>
-              <Text style={styles.sectionTitle}>Your cards <Text style={styles.badge}>{filteredCards.length}</Text></Text>
+              <Text style={styles.sectionTitle}>
+                Your cards{" "}
+                <Text style={styles.badge}>{filteredCards.length}</Text>
+              </Text>
               <TouchableOpacity onPress={() => router.push("/screens/addcard")}>
                 <Text style={styles.addCardLink}>+ Add card</Text>
               </TouchableOpacity>
@@ -153,42 +161,72 @@ export default function CreditCards() {
             {loading ? (
               <ActivityIndicator color="#000" size="large" />
             ) : filteredCards.length === 0 ? (
-              <Text style={{ color: "#888", textAlign: "center", marginTop: 20 }}>No matching cards found.</Text>
+              <Text
+                style={{ color: "#888", textAlign: "center", marginTop: 20 }}
+              >
+                No matching cards found.
+              </Text>
             ) : (
-              filteredCards.map(card => {
+              filteredCards.map((card) => {
                 const isLongPressed = longPressedCardId === card._id;
                 return (
                   <TouchableOpacity
-  key={card._id}
-  onLongPress={() => setLongPressedCardId(card._id)}
-  delayLongPress={800}
->
-  <View style={{ position: 'relative' }}>
-    <View style={styles.cardBox}>
-      <Text style={styles.cardTitle}>{card.bank}</Text>
-      <Text style={styles.cardSub}>{card.cardName}</Text>
-      <View style={styles.billRow}>
-        <Text style={styles.billText}>🧾 Bill pending for this card?</Text>
-        <TouchableOpacity style={styles.payNowBtn}>
-          <Text style={styles.payNowText}>Pay Now</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+                    key={card._id}
+                    onLongPress={() => setLongPressedCardId(card._id)}
+                    delayLongPress={800}
+                  >
+                    <View style={{ position: "relative" }}>
+                      <View style={styles.cardBox}>
+                        <View style={styles.cardHeader}>
+                          <Text style={styles.cardBank}>{card.bank} Bank</Text>
+                          <Text style={styles.cardName}>{card.cardName}</Text>
+                        </View>
 
-    {longPressedCardId === card._id && (
-      <View style={styles.backdrop}>
-        <View style={styles.actionOverlay}>
-          <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(card._id)}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => setLongPressedCardId(null)}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    )}
-  </View>
-</TouchableOpacity>
+                        <View style={styles.chip} />
+
+                        <View style={styles.cardNumber}>
+                          <Text style={styles.dots}>•••• •••• ••••</Text>
+                          <Text style={styles.lastDigits}>
+                            {card.last4Digits || "0000"}
+                          </Text>
+                        </View>
+
+                        <Text style={styles.cardHolder}>
+                          {card.cardHolderName || "Your Name"}
+                        </Text>
+                        <View style={styles.networkLogoWrapper}>
+                          <Image
+                           source={
+  card.network?.toLowerCase() === "visa"
+    ? require("../../assets/banks/visa_sign.png")
+    : require("../../assets/banks/master_card.png")
+}
+                            style={styles.networkLogo}
+                            resizeMode="contain"
+                          />
+                        </View>
+                      </View>
+
+                      {longPressedCardId === card._id && (
+                        <View style={styles.backdrop}>
+                          <View style={styles.actionOverlay}>
+                            <TouchableOpacity
+                              style={styles.deleteBtn}
+                              onPress={() => handleDelete(card._id)}
+                            >
+                              <Text style={styles.deleteText}>Delete</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.cancelBtn}
+                              onPress={() => setLongPressedCardId(null)}
+                            >
+                              <Text style={styles.cancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
                 );
               })
             )}
@@ -200,14 +238,16 @@ export default function CreditCards() {
             </View>
 
             <TouchableOpacity style={styles.redemptionBox}>
-              <Text style={styles.redemptionText}>🎁 Check redemption options</Text>
+              <Text style={styles.redemptionText}>
+                🎁 Check redemption options
+              </Text>
             </TouchableOpacity>
           </ScrollView>
 
           {sortModalVisible && (
-            <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+            <Animated.View style={[StyleSheet.absoluteFill, { zIndex: 9999 }]}>
               <TouchableWithoutFeedback onPress={closeSortModal}>
-                <View style={styles.overlay}>
+                <View style={{ flex: 1 }}>
                   <TouchableWithoutFeedback>
                     <Animated.View style={styles.popupMenu}>
                       <Text style={styles.popupTitle}>Sort By</Text>
@@ -216,7 +256,7 @@ export default function CreditCards() {
                         "Due Date",
                         "Total Due Amount",
                         "A-Z Bank (Default)",
-                        "A-Z Card Name"
+                        "A-Z Card Name",
                       ].map((option) => (
                         <TouchableOpacity
                           key={option}
@@ -226,10 +266,15 @@ export default function CreditCards() {
                           }}
                           style={styles.popupOption}
                         >
-                          <Text style={[
-                            styles.popupOptionText,
-                            option === sortOption && { color: "#3D5CFF", fontWeight: "700" }
-                          ]}>
+                          <Text
+                            style={[
+                              styles.popupOptionText,
+                              option === sortOption && {
+                                color: "#3D5CFF",
+                                fontWeight: "700",
+                              },
+                            ]}
+                          >
                             {option}
                           </Text>
                         </TouchableOpacity>
@@ -247,11 +292,11 @@ export default function CreditCards() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 16 },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -260,140 +305,211 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   cardsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  badge: { color: '#000', paddingHorizontal: 6, borderRadius: 8 },
-  addCardLink: { color: '#000', fontWeight: '600' },
-  cardBox: { backgroundColor: '#2f2f4f', padding: 20, borderRadius: 16, marginBottom: 16 },
-  cardTitle: { color: '#fff', fontSize: 16, marginBottom: 4 },
-  cardSub: { color: '#ccc', fontSize: 14 },
-  billRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, alignItems: 'center' },
-  billText: { color: '#fff' },
-  payNowBtn: { backgroundColor: '#fff', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
-  payNowText: { color: '#000', fontWeight: '600' },
-  featuresRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
-  feature: { alignItems: 'center' },
-  featureLabel: { fontSize: 12, marginTop: 4, color: '#000' },
-  redemptionBox: { marginTop: 20, padding: 12, borderRadius: 10, backgroundColor: '#fff' },
-  redemptionText: { fontWeight: '600', color: '#000' },
-  blurredCard: { backgroundColor: '#1E1E3F99', position: 'relative' },
-  
- popupMenu: {
-  position: 'absolute',
-  top: 60,               // ✅ position below TopBar
-  right: 16,             // ✅ aligns to the right side
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 8,
-  elevation: 10,
-  width: 220,
-  zIndex: 9999,
-},
+  sectionTitle: { fontSize: 16, fontWeight: "bold", color: "#000" },
+  badge: { color: "#000", paddingHorizontal: 6, borderRadius: 8 },
+  addCardLink: { color: "#000", fontWeight: "600" },
+  cardBox: {
+    backgroundColor: "#2f2f4f",
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  cardTitle: { color: "#fff", fontSize: 16, marginBottom: 4 },
+  cardSub: { color: "#ccc", fontSize: 14 },
+  billRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    alignItems: "center",
+  },
+  billText: { color: "#fff" },
+  payNowBtn: {
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  payNowText: { color: "#000", fontWeight: "600" },
+  featuresRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 20,
+  },
+  feature: { alignItems: "center" },
+  featureLabel: { fontSize: 12, marginTop: 4, color: "#000" },
+  redemptionBox: {
+    marginTop: 20,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+  },
+  redemptionText: { fontWeight: "600", color: "#000" },
+  blurredCard: { backgroundColor: "#1E1E3F99", position: "relative" },
+
+  popupMenu: {
+    position: "absolute",
+    top: 60, // ⬅️ pushes it below TopBar and SearchBar
+    right: 16,
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    elevation: 10,
+    width: 220,
+    zIndex: 9999,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   popupTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#333',
+    color: "#333",
   },
   popupOption: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   popupOptionText: {
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
 
   cardBox: {
-  backgroundColor: '#1E1D42',
-  borderRadius: 12,
-  padding: 16,
-  marginBottom: 20,
-},
+    backgroundColor: "#1B3C73", // solid rich blue
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    width: "100%",
+  },
 
-billRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 12,
-},
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
 
-payNowBtn: {
-  backgroundColor: '#fff',
-  paddingVertical: 6,
-  paddingHorizontal: 12,
-  borderRadius: 20,
-},
+  cardBank: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 
-payNowText: {
-  color: '#000',
-  fontWeight: 'bold',
-},
+  cardName: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
 
-cardTitle: {
-  color: '#fff',
-  fontSize: 16,
-  fontWeight: 'bold',
-},
+  chip: {
+    width: 40,
+    height: 30,
+    borderRadius: 6,
+    backgroundColor: "#cccccc",
+    marginBottom: 20,
+  },
 
-cardSub: {
-  color: '#ccc',
-  marginTop: 4,
-},
+  cardNumber: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
 
-billText: {
-  color: '#ccc',
-},
+  dots: {
+    color: "#ffffff",
+    fontSize: 18,
+    marginRight: 10,
+  },
 
-// 👇 Overlay & Button Styles
+  lastDigits: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
 
-backdrop: {
-  ...StyleSheet.absoluteFillObject,
-  backgroundColor: 'rgba(0,0,0,0.5)',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 999,
-  borderRadius: 12,
-},
+  cardHolder: {
+    color: "#ffffffaa",
+    fontSize: 14,
+  },
 
-actionOverlay: {
-  backgroundColor: '#fff',
-  padding: 20,
-  borderRadius: 12,
-  alignItems: 'center',
-  elevation: 10,
-},
+  // reuse your existing backdrop + overlay styles:
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
 
-deleteBtn: {
-  backgroundColor: 'red',
-  paddingVertical: 10,
-  paddingHorizontal: 20,
-  borderRadius: 20,
-  marginBottom: 10,
-},
+  actionOverlay: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    elevation: 10,
+  },
 
-deleteText: {
-  color: '#fff',
-  fontWeight: 'bold',
-},
+  // 👇 Overlay & Button Styles
 
-cancelBtn: {
-  backgroundColor: '#ccc',
-  paddingVertical: 8,
-  paddingHorizontal: 18,
-  borderRadius: 20,
-},
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+    borderRadius: 12,
+  },
 
-cancelText: {
-  color: '#000',
-  fontWeight: '600',
-},
+  actionOverlay: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    elevation: 10,
+  },
 
+  deleteBtn: {
+    backgroundColor: "red",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+
+  deleteText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  cancelBtn: {
+    backgroundColor: "#ccc",
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+  },
+
+  cancelText: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  networkLogoWrapper: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+  },
+
+  networkLogo: {
+    width: 150,
+    height: 70,
+  },
 });
