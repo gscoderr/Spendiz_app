@@ -32,11 +32,11 @@ export default function Welcome() {
     console.log(api.defaults.baseURL);
     try {
       setLoading(true);
+     
       // Alert.alert('Sending OTP', 'Please wait while we send you an OTP');
       const response = await api.post(`/auth/send-otp`, {
         phone,
       });
-
 
 
       if (response.data.success) {
