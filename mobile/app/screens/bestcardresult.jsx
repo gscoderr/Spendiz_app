@@ -1,146 +1,191 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  StatusBar,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import TopBar from "../component/topbar";
+  SafeAreaView,
+} from 'react-native';
 
-export default function BestCardResult() {
-  const router = useRouter();
+import SavedCard from '../component/savedcard.jsx';
+import { useBestCard } from '../../context/bestcard.context.js';
+import { useLocalSearchParams } from 'expo-router';
 
-  const {
-    cardName,
-    bank,
-    rewardType,
-    benefitValue,
-    cashback,
-    rewardRate,
-    subCategory,
-    category,
-    loungeAccess,
-    fuelBenefit,
-    milestone,
-    otherPerks,
-    tnc,
-    remarks,
-  } = useLocalSearchParams();
+export default function CardBenefitsScreen() {
+  const { bestCards } = useBestCard();
+  const params = useLocalSearchParams();
+  const [suggestions, setSuggestions] = useState([]);
 
-  const title = `${cardName} - ${bank}`;
-  const formattedCategory =
-    category?.charAt(0).toUpperCase() + category?.slice(1);
+  useEffect(() => {
+    if (params?.suggestions) {
+      try {
+        setSuggestions(JSON.parse(params.suggestions));
+      } catch (err) {
+        console.warn("❌ Failed to parse suggestions", err);
+      }
+    }
+  }, []);
+
+  if (!bestCards || bestCards.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No cards matched.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
-      <TopBar screen={formattedCategory} />
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.sectionTitle}>TOP BENEFITS FOR YOUR SPEND</Text>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.resultTitle}>🎉 Best Card for {subCategory}</Text>
+        {bestCards.map((card, index) => (
+          <View key={index} style={{ marginBottom: 24 }}>
+            <SavedCard
+              card={{
+                bankName: card.bank,
+                cardName: card.cardName,
+                network: card.network,
+                tier: card.tier,
+                last4Digits: "XXXX",
+              }}
+            />
+            <View style={styles.benefitSection}>
+              <Text style={styles.amount}>₹{card.benefitValue?.toFixed(2)}</Text>
+              <Text style={styles.amountDesc}>
+                Earned via {card.rewardType === "cashback" ? "cashback" : "rewards"}
+              </Text>
+            </View>
 
-        <View style={styles.cardBox}>
-          <Text style={styles.cardName}>{title}</Text>
-          <Text style={styles.benefit}>
-            Estimated Benefit:{" "}
-            <Text style={styles.benefitValue}>₹{benefitValue}</Text>
-          </Text>
-
-          <View style={styles.breakdownBox}>
-            <Text style={styles.breakdownLabel}>Reward Summary:</Text>
-            {rewardType === "cashback" && (
-              <Text style={styles.breakdownText}>Cashback: {cashback}%</Text>
-            )}
-            {rewardType === "reward" && (
-              <Text style={styles.breakdownText}>Reward Rate: {rewardRate}%</Text>
-            )}
-            {remarks && <Text style={styles.breakdownText}>Remarks: {remarks}</Text>}
+            <View style={styles.offerCard}>
+              <View style={styles.offerLeft}>
+                <View style={styles.circleLogo} />
+                <View>
+                  <Text style={styles.offerTitle}>
+                    {card.coPartnerBrands || "Offer"}
+                  </Text>
+                  <Text style={styles.offerDescription}>
+                    {card.benefitDetails}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.redeemBtn}>Redeem</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        ))}
 
-          {loungeAccess && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Lounge Access</Text>
-              <Text style={styles.sectionText}>{loungeAccess}</Text>
-            </View>
-          )}
-
-          {fuelBenefit && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Fuel Benefit</Text>
-              <Text style={styles.sectionText}>{fuelBenefit}</Text>
-            </View>
-          )}
-
-          {milestone && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Milestone Benefits</Text>
-              <Text style={styles.sectionText}>{milestone}</Text>
-            </View>
-          )}
-
-          {otherPerks && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Other Perks</Text>
-              <Text style={styles.sectionText}>{otherPerks}</Text>
-            </View>
-          )}
-
-          {tnc && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-              <Text style={styles.sectionText}>{tnc}</Text>
-            </View>
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.doneButton} onPress={() => router.replace("/dashboard")}>
-          <Text style={styles.doneText}>Back to Dashboard</Text>
-        </TouchableOpacity>
+        {/* ✅ Suggestions shown only when no bestCard matched */}
+        {suggestions.length > 0 && (
+          <View style={styles.suggestionBox}>
+            <Text style={styles.suggestionTitle}>💡 Suggestions You May Like:</Text>
+            {suggestions.map((s, index) => (
+              <View key={index} style={styles.suggestionItem}>
+                <Text style={styles.suggestionText}>{s.cardName} — {s.bank}</Text>
+                <Text style={styles.suggestionSub}>{s.spendCategory} → {s.subCategory}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D2B" },
-  content: { padding: 20 },
-  resultTitle: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 24,
+  safe: {
+    flex: 1,
+    backgroundColor: '#F7F9FB',
   },
-  cardBox: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 30,
-  },
-  cardName: { fontSize: 18, fontWeight: "700", color: "#333", marginBottom: 10 },
-  benefit: { fontSize: 16, color: "#666" },
-  benefitValue: { fontSize: 18, fontWeight: "bold", color: "#6A5AE0" },
-  breakdownBox: { marginTop: 16 },
-  breakdownLabel: { fontWeight: "600", fontSize: 14, marginBottom: 4, color: "#444" },
-  breakdownText: { fontSize: 14, color: "#666", marginBottom: 4 },
-
-  section: { marginTop: 16 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#444", marginBottom: 4 },
-  sectionText: { fontSize: 14, color: "#666" },
-
-  doneButton: {
-    backgroundColor: "#6A5AE0",
+  container: {
     padding: 16,
-    borderRadius: 10,
-    marginTop: 10,
   },
-  doneText: {
-    textAlign: "center",
-    color: "#fff",
+  benefitSection: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  amount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0CA789',
+  },
+  amountDesc: {
+    color: '#666',
+    marginTop: 4,
+  },
+  offerCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  offerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  circleLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ddd',
+    marginRight: 12,
+  },
+  offerTitle: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  offerDescription: {
+    color: '#555',
+    fontSize: 12,
+  },
+  redeemBtn: {
+    color: '#0057E7',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    textAlign: 'center',
+    fontSize: 18,
+    marginTop: 40,
+    color: '#777',
+  },
+  suggestionBox: {
+    backgroundColor: '#1F1F35',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  suggestionTitle: {
+    color: '#00FFC2',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  suggestionItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  suggestionText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  suggestionSub: {
+    color: '#aaa',
+    fontSize: 12,
+    marginTop: 2,
   },
 });

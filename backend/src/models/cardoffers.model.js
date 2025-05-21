@@ -17,7 +17,8 @@ const cardOfferSchema = new mongoose.Schema({
   rewardPointValue: { type: Number, default: 0 },
 
   benefitDetails: { type: String, required: true },
-  coPartnerBrands: String,
+  coPartnerBrands: [String],
+
   tnc: String,
   maxRewardLimitRP: { type: Number, default: 0 },
   maxCashbackLimit: { type: Number, default: 0 },
