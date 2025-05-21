@@ -111,32 +111,45 @@ export default function CategoryForm() {
 
   const handleSubmit = async () => {
     try {
+      console.log("🚀 SUBMIT STARTED — Category:", category, "| SubCategory:", subCategory);
+
       let spendAmount = 0;
+
 
       if (category === "travel") {
         if (!from || !to || !persons || !budget) {
           alert("Please fill all travel fields.");
+          console.warn("⚠️ Missing travel fields:", { from, to, persons, budget });
           return;
         }
         spendAmount = parseFloat(budget);
       } else if (["shopping", "dining"].includes(category)) {
         if (!amount) {
           alert("Please enter spend amount.");
+          console.warn("⚠️ Missing spend amount for shopping/dining");
           return;
         }
         spendAmount = parseFloat(amount);
       } else if (category === "entertainment") {
         if (!movie || !location) {
           alert("Please enter movie name and location.");
+          console.warn("⚠️ Missing movie or location:", { movie, location });
           return;
         }
-        spendAmount = 1000; // placeholder for entertainment spend
+        spendAmount = 1000; // Placeholder
       }
 
+      // Step 2: Final Amount Validation
       if (isNaN(spendAmount) || spendAmount <= 0) {
         alert("Invalid amount");
+
         return;
       }
+
+      // // Step 3: Log request being sent
+      // console.log("📦 Sending API Request → /match/best-card");
+      // console.log("📤 Params:", { category, subCategory, amount: spendAmount });
+      // console.log("🌐 Base URL:", api.defaults.baseURL);
 
       const res = await api.get("/match/best-card", {
         params: {
@@ -146,19 +159,34 @@ export default function CategoryForm() {
         },
       });
 
-      console.log("✅ Backend match response:", res.data);
+      // Step 4: Log full response
 
-      const { bestCard } = res.data.data;
+      if (res.data.success && res.data.bestCards) {
+        setBestCard(res.data.bestCards);
+        router.push("/screens/bestcardresult");
+      } else if (res.data.suggestions) {
+        // 🔁 Pass suggestions to result screen
+        router.push({
+          pathname: "/screens/bestcardresult",
+          params: {
+            suggestions: JSON.stringify(res.data.suggestions),
+          },
+        });
+      } else {
+        alert("No match found.");
+      }
 
-      setBestCard(bestCard);
-      router.push("/screens/bestcardresult");
     } catch (err) {
-      console.error("❌ Backend match error:", err.message);
+      // Step 6: Handle error
+      console.error("❌ Backend match error:", err?.message);
+
       alert(
-        err?.response?.data?.message || "Unable to find best card. Please try again."
+        err?.response?.data?.message ||
+        "Unable to find best card. Please try again."
       );
     }
   };
+
 
   return (
     <View style={styles.container}>

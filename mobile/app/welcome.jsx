@@ -17,7 +17,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import api from '../utils/axiosInstance.js'; // Adjust the import path as necessary
 import { useUser } from '../context/user.context.js'; // Adjust the import path as necessary
 
-
 export default function Welcome() {
   const { phone, setPhone } = useUser();
   const [loading, setLoading] = useState(false);
