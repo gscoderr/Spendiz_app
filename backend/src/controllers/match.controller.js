@@ -135,12 +135,10 @@
 
 
 
-
-
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import Card from "../models/card.model.js";
-import MasterCard from "../models/mastercards.model.js";
+import CardOffer from "../models/cardoffers.model.js";
 import Fuse from "fuse.js";
 import { normalizeInput } from "../utils/normalizeInput.js";
 
@@ -161,32 +159,17 @@ export const matchBestCard = asyncHandler(async (req, res) => {
   const normalizedCategory = normalizeInput(category);
   const normalizedSubCategory = normalizeInput(subCategory);
 
-  console.log("📥 Matching from mastercards →", {
-    userId,
-    category,
-    subCategory,
-    normalizedCategory,
-    normalizedSubCategory,
-    spendAmount,
-  });
-
   const userCards = await Card.find({ userId });
   if (!userCards.length) throw new ApiError(404, "No saved cards found");
 
   const matches = [];
 
   for (const userCard of userCards) {
-    const master = await MasterCard.findOne({
+    const offers = await CardOffer.find({
       bank: userCard.bank,
       cardName: userCard.cardName,
+      spendCategory: new RegExp(normalizedCategory, "i"),
     });
-
-    if (!master || !master[normalizedCategory]) {
-      console.log("❌ Skipped: No category found for", userCard.cardName);
-      continue;
-    }
-
-    const offers = master[normalizedCategory];
 
     for (const offer of offers) {
       const subCats = (offer.subCategory || "")
@@ -194,8 +177,7 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         .split(",")
         .map((s) => normalizeInput(s.trim()));
 
-      const isMatch = subCats.includes(normalizedSubCategory);
-      if (!isMatch) continue;
+      if (!subCats.includes(normalizedSubCategory)) continue;
 
       const rewardType = offer.cashback ? "cashback" : "reward";
       const rate = parseFloat(offer.cashback ?? offer.rewardRate ?? 0);
@@ -208,23 +190,23 @@ export const matchBestCard = asyncHandler(async (req, res) => {
 
       const benefitValue =
         rewardType === "cashback"
-          ? Math.min(rawBenefit, parseFloat(offer.maxLimitCashback) || rawBenefit)
-          : Math.min(rawBenefit, parseFloat(offer.maxLimitRewardPoints) || rawBenefit);
+          ? Math.min(rawBenefit, offer.maxCashbackLimit || rawBenefit)
+          : Math.min(rawBenefit, offer.maxRewardLimitRP || rawBenefit);
 
       matches.push({
-        cardName: master.cardName,
-        bank: master.bank,
-        network: master.network,
-        tier: master.tier,
+        cardName: offer.cardName,
+        bank: offer.bank,
+        network: offer.network,
+        tier: offer.tier,
         rewardType,
         cashback: offer.cashback,
         rewardRate: offer.rewardRate,
         rewardPointValue: offer.rewardPointValue,
         benefitValue,
-        benefitDetails: offer.benefit,
+        benefitDetails: offer.benefitDetails,
         coPartnerBrands: offer.coPartnerBrands,
         tnc: offer.tnc,
-        remarks: master.remarks,
+        remarks: offer.remarks,
       });
     }
   }
@@ -241,21 +223,14 @@ export const matchBestCard = asyncHandler(async (req, res) => {
     });
   }
 
-  // 🧠 Fuzzy fallback if no exact match
-  const allMasters = await MasterCard.find({});
-  const flatSubCategories = allMasters.flatMap((master) => {
-    const categoryOffers = master[normalizedCategory] || [];
-    return categoryOffers.flatMap((offer) =>
-      (offer.subCategory || "")
-        .split(",")
-        .map((sub) => ({
-          subCategory: sub.trim(),
-          bank: master.bank,
-          cardName: master.cardName,
-          spendCategory: normalizedCategory,
-        }))
-    );
-  });
+  // Fuzzy fallback
+  const allOffers = await CardOffer.find({});
+  const flatSubCategories = allOffers.map((offer) => ({
+    subCategory: offer.subCategory,
+    bank: offer.bank,
+    cardName: offer.cardName,
+    spendCategory: offer.spendCategory,
+  }));
 
   const fuse = new Fuse(flatSubCategories, {
     keys: ["subCategory"],

@@ -17,9 +17,13 @@ export default function CardBenefitsScreen() {
   const params = useLocalSearchParams();
   const [suggestions, setSuggestions] = useState([]);
 
+  console.debug("📦 bestCards loaded in screen:", bestCards);
+console.debug("📨 suggestions param received:", params?.suggestions);
+
   useEffect(() => {
     if (params?.suggestions) {
       try {
+        console.debug("📨 Parsing suggestions:", params.suggestions);
         setSuggestions(JSON.parse(params.suggestions));
       } catch (err) {
         console.warn("❌ Failed to parse suggestions", err);
@@ -42,7 +46,8 @@ export default function CardBenefitsScreen() {
           <Text style={styles.sectionTitle}>TOP BENEFITS FOR YOUR SPEND</Text>
         )}
 
-        {bestCards.map((card, index) => (
+        {bestCards.map((card, index) =>  console.debug("🧾 Rendering card:", card)(
+          
           <View key={index} style={{ marginBottom: 24 }}>
             <SavedCard
               card={{
