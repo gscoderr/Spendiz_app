@@ -27,7 +27,7 @@ export default function CardBenefitsScreen() {
     }
   }, []);
 
-  if (!bestCards || bestCards.length === 0) {
+  if ((!bestCards || bestCards.length === 0) && suggestions.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>No cards matched.</Text>
@@ -38,7 +38,9 @@ export default function CardBenefitsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.sectionTitle}>TOP BENEFITS FOR YOUR SPEND</Text>
+        {bestCards?.length > 0 && (
+          <Text style={styles.sectionTitle}>TOP BENEFITS FOR YOUR SPEND</Text>
+        )}
 
         {bestCards.map((card, index) => (
           <View key={index} style={{ marginBottom: 24 }}>
@@ -54,7 +56,7 @@ export default function CardBenefitsScreen() {
             <View style={styles.benefitSection}>
               <Text style={styles.amount}>₹{card.benefitValue?.toFixed(2)}</Text>
               <Text style={styles.amountDesc}>
-                Earned via {card.rewardType === "cashback" ? "cashback" : "rewards"}
+                Earned via {card.rewardType === "cashback" ? "cashback" : "reward points"}
               </Text>
             </View>
 
@@ -63,10 +65,12 @@ export default function CardBenefitsScreen() {
                 <View style={styles.circleLogo} />
                 <View>
                   <Text style={styles.offerTitle}>
-                    {card.coPartnerBrands || "Offer"}
+                    {Array.isArray(card.coPartnerBrands)
+                      ? card.coPartnerBrands.join(", ")
+                      : card.coPartnerBrands || "Partner Offer"}
                   </Text>
                   <Text style={styles.offerDescription}>
-                    {card.benefitDetails}
+                    {card.benefitDetails || "Benefit details not available"}
                   </Text>
                 </View>
               </View>
@@ -77,7 +81,7 @@ export default function CardBenefitsScreen() {
           </View>
         ))}
 
-        {/* ✅ Suggestions shown only when no bestCard matched */}
+        {/* 💡 Suggestions block (only if no bestCards matched) */}
         {suggestions.length > 0 && (
           <View style={styles.suggestionBox}>
             <Text style={styles.suggestionTitle}>💡 Suggestions You May Like:</Text>
@@ -102,17 +106,17 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
   },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
   benefitSection: {
     backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 20,
     alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
   },
   amount: {
     fontSize: 24,
@@ -135,6 +139,7 @@ const styles = StyleSheet.create({
   offerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   circleLogo: {
     width: 40,
@@ -146,6 +151,7 @@ const styles = StyleSheet.create({
   offerTitle: {
     fontWeight: '600',
     fontSize: 14,
+    flexWrap: 'wrap',
   },
   offerDescription: {
     color: '#555',
@@ -154,6 +160,7 @@ const styles = StyleSheet.create({
   redeemBtn: {
     color: '#0057E7',
     fontWeight: 'bold',
+    paddingLeft: 12,
   },
   errorText: {
     textAlign: 'center',

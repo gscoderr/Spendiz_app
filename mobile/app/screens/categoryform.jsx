@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TopBar from "../component/topbar";
 import { useBestCard } from "../../context/bestcard.context";
+import { useUser } from "../../context/user.context"; // ✅ Added
 import api from "../../utils/axiosInstance";
 
 export default function CategoryForm() {
@@ -18,16 +19,15 @@ export default function CategoryForm() {
   const formattedCategory = category?.charAt(0).toUpperCase() + category?.slice(1);
   const router = useRouter();
   const { setBestCard } = useBestCard();
+  const { token } = useUser(); // ✅ Get auth token
 
-  // Dynamic input states
+  // States for dynamic fields
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [persons, setPersons] = useState("");
   const [budget, setBudget] = useState("");
-
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("Full");
-
   const [movie, setMovie] = useState("");
   const [location, setLocation] = useState("");
 
@@ -38,37 +38,15 @@ export default function CategoryForm() {
           <>
             <TextInput style={styles.input} placeholder="From" value={from} onChangeText={setFrom} />
             <TextInput style={styles.input} placeholder="To" value={to} onChangeText={setTo} />
-            <TextInput
-              style={styles.input}
-              placeholder="Number of Persons"
-              keyboardType="numeric"
-              value={persons}
-              onChangeText={setPersons}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Approx. Budget (₹)"
-              keyboardType="numeric"
-              value={budget}
-              onChangeText={setBudget}
-            />
+            <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
+            <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
           </>
         );
       case "entertainment":
         return (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="Movie/Event Name"
-              value={movie}
-              onChangeText={setMovie}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Location"
-              value={location}
-              onChangeText={setLocation}
-            />
+            <TextInput style={styles.input} placeholder="Movie/Event Name" value={movie} onChangeText={setMovie} />
+            <TextInput style={styles.input} placeholder="Location" value={location} onChangeText={setLocation} />
           </>
         );
       case "shopping":
@@ -76,31 +54,11 @@ export default function CategoryForm() {
       default:
         return (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="Spend Amount (₹)"
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-            />
+            <TextInput style={styles.input} placeholder="Spend Amount (₹)" keyboardType="numeric" value={amount} onChangeText={setAmount} />
             <View style={styles.modeToggle}>
               {["Full", "EMI"].map((mode) => (
-                <TouchableOpacity
-                  key={mode}
-                  style={[
-                    styles.modeButton,
-                    paymentMode === mode && styles.modeSelected,
-                  ]}
-                  onPress={() => setPaymentMode(mode)}
-                >
-                  <Text
-                    style={[
-                      styles.modeText,
-                      paymentMode === mode && styles.modeTextSelected,
-                    ]}
-                  >
-                    {mode}
-                  </Text>
+                <TouchableOpacity key={mode} style={[styles.modeButton, paymentMode === mode && styles.modeSelected]} onPress={() => setPaymentMode(mode)}>
+                  <Text style={[styles.modeText, paymentMode === mode && styles.modeTextSelected]}>{mode}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -111,47 +69,39 @@ export default function CategoryForm() {
 
   const handleSubmit = async () => {
     try {
-      console.log("🚀 SUBMIT STARTED — Category:", category, "| SubCategory:", subCategory);
+      console.log("🚀 SUBMIT — Category:", category, "| SubCategory:", subCategory);
 
       let spendAmount = 0;
-
 
       if (category === "travel") {
         if (!from || !to || !persons || !budget) {
           alert("Please fill all travel fields.");
-          console.warn("⚠️ Missing travel fields:", { from, to, persons, budget });
           return;
         }
         spendAmount = parseFloat(budget);
       } else if (["shopping", "dining"].includes(category)) {
         if (!amount) {
           alert("Please enter spend amount.");
-          console.warn("⚠️ Missing spend amount for shopping/dining");
           return;
         }
         spendAmount = parseFloat(amount);
       } else if (category === "entertainment") {
         if (!movie || !location) {
           alert("Please enter movie name and location.");
-          console.warn("⚠️ Missing movie or location:", { movie, location });
           return;
         }
-        spendAmount = 1000; // Placeholder
+        spendAmount = 1000; // Placeholder default
       }
 
-      // Step 2: Final Amount Validation
       if (isNaN(spendAmount) || spendAmount <= 0) {
-        alert("Invalid amount");
-
+        alert("Invalid amount.");
         return;
       }
 
-      // // Step 3: Log request being sent
-      // console.log("📦 Sending API Request → /match/best-card");
-      // console.log("📤 Params:", { category, subCategory, amount: spendAmount });
-      // console.log("🌐 Base URL:", api.defaults.baseURL);
-
       const res = await api.get("/match/best-card", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         params: {
           category,
           subCategory,
@@ -159,14 +109,10 @@ export default function CategoryForm() {
         },
       });
 
-      // Step 4: Log full response
-      console.log("📦 API Response:", res.data) ;
-
       if (res.data.success && res.data.bestCards) {
         setBestCard(res.data.bestCards);
         router.push("/screens/bestcardresult");
       } else if (res.data.suggestions) {
-        // 🔁 Pass suggestions to result screen
         router.push({
           pathname: "/screens/bestcardresult",
           params: {
@@ -174,31 +120,21 @@ export default function CategoryForm() {
           },
         });
       } else {
-        alert("No match found.");
+        alert("No matching card found.");
       }
 
     } catch (err) {
-      // Step 6: Handle error
-      console.error("❌ Backend match error:", err?.message);
-
-      alert(
-        err?.response?.data?.message ||
-        "Unable to find best card. Please try again."
-      );
+      console.error("❌ Match Error:", err?.message);
+      alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
     }
   };
-
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
       <TopBar screen={formattedCategory} />
 
-      <ScrollView
-        contentContainerStyle={styles.form}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>{subCategory}</Text>
         {renderFields()}
 
@@ -211,7 +147,7 @@ export default function CategoryForm() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D2B", paddingTop: 40, },
+  container: { flex: 1, backgroundColor: "#0D0D2B", paddingTop: 40 },
   form: { padding: 20 },
   title: {
     color: "#fff",
