@@ -78,35 +78,64 @@ export default function CreditCards() {
   }, [cards, searchQuery, sortOption]);
 
   const handleDelete = (cardId) => {
-  Alert.alert(
-    "Confirm Delete",
-    "Are you sure you want to delete this card?",
-    [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        onPress: async () => {
-          try {
-            const res = await api.delete(`/cards/${cardId}`);
-            if (res.status === 200) {
-              setCards((prev) => prev.filter((c) => c._id !== cardId));
-              setLongPressedCardId(null);
-              
-            }
-          } catch (err) {
-            console.error("❌ Delete failed:", err.message);
-            Alert.alert("Error", "Failed to delete card");
-          }
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this card?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
         },
-        style: "destructive",
-      },
-    ],
-    { cancelable: true }
-  );
-};
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const res = await api.delete(`/cards/${cardId}`);
+              if (res.status === 200) {
+                setCards((prev) => prev.filter((c) => c._id !== cardId));
+                setLongPressedCardId(null);
+
+              }
+            } catch (err) {
+              console.error("❌ Delete failed:", err.message);
+              Alert.alert("Error", "Failed to delete card");
+            }
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleUpdate = async (cardId) => {
+
+    Alert.alert(
+      "Edit Card",
+      "Do you want to edit this card?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Edit",
+          onPress: () => {
+            setLongPressedCardId(null);
+            router.push({
+              pathname: "/screens/addcard",
+              params: {
+                editMode: true,
+                cardData: JSON.stringify(card),
+              },
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  }
+
 
 
 
@@ -248,10 +277,10 @@ export default function CreditCards() {
                               <Text style={styles.deleteText}>Delete</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={styles.cancelBtn}
-                              onPress={() => setLongPressedCardId(null)}
+                              style={styles.editBtn}
+                              onPress={() => handleUpdate(card._id)}
                             >
-                              <Text style={styles.cancelText}>Cancel</Text>
+                              <Text style={styles.cancelText}>Edit</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -526,7 +555,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  cancelBtn: {
+  editBtn: {
     backgroundColor: "#ccc",
     paddingVertical: 8,
     paddingHorizontal: 18,
