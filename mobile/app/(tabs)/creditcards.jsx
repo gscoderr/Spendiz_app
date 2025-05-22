@@ -22,6 +22,8 @@ import TopBar from "../component/topbar.jsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
+
+
 export default function CreditCards() {
   const router = useRouter();
   const [cards, setCards] = useState([]);
@@ -75,17 +77,67 @@ export default function CreditCards() {
     setFilteredCards(sorted);
   }, [cards, searchQuery, sortOption]);
 
-  const handleDelete = async (cardId) => {
-    try {
-      await api.delete(`/cards/${cardId}`);
-      setCards((prev) => prev.filter((c) => c._id !== cardId));
-      setLongPressedCardId(null);
-      Alert.alert("Deleted", "Card removed successfully");
-    } catch (err) {
-      console.error("❌ Delete failed:", err.message);
-      Alert.alert("Error", "Failed to delete card");
-    }
+  const handleDelete = (cardId) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this card?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const res = await api.delete(`/cards/${cardId}`);
+              if (res.status === 200) {
+                setCards((prev) => prev.filter((c) => c._id !== cardId));
+                setLongPressedCardId(null);
+
+              }
+            } catch (err) {
+              console.error("❌ Delete failed:", err.message);
+              Alert.alert("Error", "Failed to delete card");
+            }
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
   };
+
+  const handleUpdate = async (cardId) => {
+
+    Alert.alert(
+      "Edit Card",
+      "Do you want to edit this card?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Edit",
+          onPress: () => {
+            setLongPressedCardId(null);
+            router.push({
+              pathname: "/screens/addcard",
+              params: {
+                editMode: true,
+                cardData: JSON.stringify(card),
+              },
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  }
+
+
+
 
   const handleScroll = () => {
     if (sortModalVisible) setSortModalVisible(false);
@@ -225,10 +277,10 @@ export default function CreditCards() {
                               <Text style={styles.deleteText}>Delete</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={styles.cancelBtn}
-                              onPress={() => setLongPressedCardId(null)}
+                              style={styles.editBtn}
+                              onPress={() => handleUpdate(card._id)}
                             >
-                              <Text style={styles.cancelText}>Cancel</Text>
+                              <Text style={styles.cancelText}>Edit</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -420,16 +472,16 @@ const styles = StyleSheet.create({
   },
 
   cardChip: {
-  width: 48,
-  height: 32,
-  borderRadius: 6,
-  marginBottom: 20,
-  elevation: 4, // for subtle shadow on Android
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.2,
-  shadowRadius: 2,
-},
+    width: 48,
+    height: 32,
+    borderRadius: 6,
+    marginBottom: 20,
+    elevation: 4, // for subtle shadow on Android
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
 
   cardNumber: {
     flexDirection: "row",
@@ -503,7 +555,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  cancelBtn: {
+  editBtn: {
     backgroundColor: "#ccc",
     paddingVertical: 8,
     paddingHorizontal: 18,

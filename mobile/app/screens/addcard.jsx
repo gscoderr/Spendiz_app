@@ -9,7 +9,8 @@ import api from "../../utils/axiosInstance.js";
 import { Ionicons } from "@expo/vector-icons";
 import SelectBankModal from "./select_bank.jsx";
 import DropDownPicker from "react-native-dropdown-picker";
-import { useRouter } from "expo-router";
+
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 export default function AddCard() {
   const router = useRouter();
