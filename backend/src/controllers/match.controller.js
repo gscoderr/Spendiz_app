@@ -142,6 +142,8 @@ import CardOffer from "../models/cardoffers.model.js";
 import Fuse from "fuse.js";
 import { normalizeInput } from "../utils/normalizeInput.js";
 
+import testCards from "../seed/sample_mastercards_10cards.json" assert { type: "json" };
+
 export const matchBestCard = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { category, subCategory, amount } = req.query;
@@ -165,50 +167,60 @@ export const matchBestCard = asyncHandler(async (req, res) => {
   const matches = [];
 
   for (const userCard of userCards) {
-    const offers = await CardOffer.find({
-      bank: userCard.bank,
-      cardName: userCard.cardName,
-      spendCategory: new RegExp(normalizedCategory, "i"),
-    });
+    const master = testCards.find(
+      (c) =>
+        c.bank.toLowerCase() === userCard.bank.toLowerCase() &&
+        c.cardName.toLowerCase() === userCard.cardName.toLowerCase()
+    );
+
+    if (!master || !master[normalizedCategory]) {
+      console.log("❌ Skipping: No category found in JSON for", userCard.cardName);
+      continue;
+    }
+
+    const offers = master[normalizedCategory]; // e.g., master["travel"]
+
 
     for (const offer of offers) {
-      const subCats = (offer.subCategory || "")
-        .toLowerCase()
-        .split(",")
-        .map((s) => normalizeInput(s.trim()));
+  const subCats = (offer.subCategory || "")
+    .toLowerCase()
+    .split(",")
+    .map((s) => normalizeInput(s.trim()));
 
-      if (!subCats.includes(normalizedSubCategory)) continue;
+  const isMatch = subCats.includes(normalizedSubCategory);
+  if (!isMatch) continue;
 
-      const rewardType = offer.cashback ? "cashback" : "reward";
-      const rate = parseFloat(offer.cashback ?? offer.rewardRate ?? 0);
-      const pointValue = parseFloat(offer.rewardPointValue ?? 0);
+  const rewardType = offer.cashback ? "cashback" : "reward";
+  const rate = parseFloat(offer.cashback ?? offer.rewardRate ?? 0);
+  const pointValue = parseFloat(offer.rewardPointValue ?? 0);
 
-      const rawBenefit =
-        rewardType === "cashback"
-          ? (rate / 100) * spendAmount
-          : (rate / 100) * spendAmount * pointValue;
+  const rawBenefit =
+    rewardType === "cashback"
+      ? (rate / 100) * spendAmount
+      : (rate / 100) * spendAmount * pointValue;
 
-      const benefitValue =
-        rewardType === "cashback"
-          ? Math.min(rawBenefit, offer.maxCashbackLimit || rawBenefit)
-          : Math.min(rawBenefit, offer.maxRewardLimitRP || rawBenefit);
+  const benefitValue =
+    rewardType === "cashback"
+      ? Math.min(rawBenefit, parseFloat(offer.maxLimitCashback) || rawBenefit)
+      : Math.min(rawBenefit, parseFloat(offer.maxLimitRewardPoints) || rawBenefit);
 
-      matches.push({
-        cardName: offer.cardName,
-        bank: offer.bank,
-        network: offer.network,
-        tier: offer.tier,
-        rewardType,
-        cashback: offer.cashback,
-        rewardRate: offer.rewardRate,
-        rewardPointValue: offer.rewardPointValue,
-        benefitValue,
-        benefitDetails: offer.benefitDetails,
-        coPartnerBrands: offer.coPartnerBrands,
-        tnc: offer.tnc,
-        remarks: offer.remarks,
-      });
-    }
+  matches.push({
+    cardName: master.cardName,
+    bank: master.bank,
+    network: master.network,
+    tier: master.tier,
+    rewardType,
+    cashback: offer.cashback,
+    rewardRate: offer.rewardRate,
+    rewardPointValue: offer.rewardPointValue,
+    benefitValue,
+    benefitDetails: offer.benefit,
+    coPartnerBrands: offer.coPartnerBrands,
+    tnc: offer.tnc,
+    remarks: master.remarks,
+  });
+}
+
   }
 
   if (matches.length > 0) {
