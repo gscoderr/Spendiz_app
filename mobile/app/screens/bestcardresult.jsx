@@ -20,6 +20,9 @@ export default function CardBenefitsScreen() {
   console.debug("📦 bestCards loaded in screen:", bestCards);
 console.debug("📨 suggestions param received:", params?.suggestions);
 
+
+console.debug("🧾 Rendering bestCards:");
+
   useEffect(() => {
     if (params?.suggestions) {
       try {
