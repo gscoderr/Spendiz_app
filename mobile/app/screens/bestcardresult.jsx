@@ -6,11 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Image,
 } from 'react-native';
 
-import SavedCard from '../component/savedcard.jsx';
 import { useBestCard } from '../../context/bestcard.context.js';
 import { useLocalSearchParams } from 'expo-router';
+import SavedCard from '../component/savedcard.jsx'; // Your custom visual card
 
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
@@ -39,11 +40,12 @@ export default function CardBenefitsScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         {bestCards?.length > 0 && (
-          <Text style={styles.sectionTitle}>TOP BENEFITS FOR YOUR SPEND</Text>
+          <Text style={styles.sectionTitle}>BENEFITS OF YOUR CARD</Text>
         )}
 
         {bestCards.map((card, index) => (
-          <View key={index} style={{ marginBottom: 24 }}>
+          <View key={index} style={{ marginBottom: 28 }}>
+            {/* Card Image / Visual */}
             <SavedCard
               card={{
                 bankName: card.bank,
@@ -53,35 +55,57 @@ export default function CardBenefitsScreen() {
                 last4Digits: "XXXX",
               }}
             />
-            <View style={styles.benefitSection}>
+
+            {/* Amount Benefit */}
+            <View style={styles.amountBox}>
               <Text style={styles.amount}>₹{card.benefitValue?.toFixed(2)}</Text>
-              <Text style={styles.amountDesc}>
-                Earned via {card.rewardType === "cashback" ? "cashback" : "reward points"}
-              </Text>
+              <Text style={styles.amountDesc}>Amount you earned</Text>
             </View>
 
-            <View style={styles.offerCard}>
-              <View style={styles.offerLeft}>
-                <View style={styles.circleLogo} />
-                <View>
-                  <Text style={styles.offerTitle}>
-                    {Array.isArray(card.coPartnerBrands)
-                      ? card.coPartnerBrands.join(", ")
-                      : card.coPartnerBrands || "Partner Offer"}
-                  </Text>
-                  <Text style={styles.offerDescription}>
-                    {card.benefitDetails || "Benefit details not available"}
-                  </Text>
+            {/* Partner Offers */}
+            {card.partnerOffers?.length > 0
+              ? card.partnerOffers.map((offer, idx) => (
+                  <View key={idx} style={styles.offerCard}>
+                    <View style={styles.offerLeft}>
+                      <View style={[styles.circleLogo, { backgroundColor: idx % 2 === 0 ? '#0CA789' : '#1F1F35' }]} />
+                      <View>
+                        <Text style={styles.offerTitle}>
+                          {offer.brand || "Co-partner offer"}
+                        </Text>
+                        <Text style={styles.offerDescription}>
+                          {offer.description || "Discount applicable"}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity>
+                      <Text style={styles.redeemBtn}>Redeem</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              : (
+                <View style={styles.offerCard}>
+                  <View style={styles.offerLeft}>
+                    <View style={styles.circleLogo} />
+                    <View>
+                      <Text style={styles.offerTitle}>
+                        {Array.isArray(card.coPartnerBrands)
+                          ? card.coPartnerBrands.join(", ")
+                          : card.coPartnerBrands || "Partner Offer"}
+                      </Text>
+                      <Text style={styles.offerDescription}>
+                        {card.benefitDetails || "Benefit details not available"}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity>
+                    <Text style={styles.redeemBtn}>Redeem</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <TouchableOpacity>
-                <Text style={styles.redeemBtn}>Redeem</Text>
-              </TouchableOpacity>
-            </View>
+              )}
           </View>
         ))}
 
-        {/* 💡 Suggestions block (only if no bestCards matched) */}
+        {/* Suggestions Section */}
         {suggestions.length > 0 && (
           <View style={styles.suggestionBox}>
             <Text style={styles.suggestionTitle}>💡 Suggestions You May Like:</Text>
@@ -107,25 +131,27 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 18,
   },
-  benefitSection: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
+  amountBox: {
+    backgroundColor: '#0CA789',
+    padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
+    marginBottom: 20,
   },
   amount: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#0CA789',
+    color: '#fff',
   },
   amountDesc: {
-    color: '#666',
-    marginTop: 4,
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 6,
   },
   offerCard: {
     backgroundColor: '#fff',
@@ -134,7 +160,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   offerLeft: {
     flexDirection: 'row',
@@ -145,16 +175,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#ddd',
     marginRight: 12,
+    backgroundColor: '#ccc',
   },
   offerTitle: {
     fontWeight: '600',
-    fontSize: 14,
-    flexWrap: 'wrap',
+    fontSize: 15,
   },
   offerDescription: {
-    color: '#555',
+    color: '#777',
     fontSize: 12,
   },
   redeemBtn: {

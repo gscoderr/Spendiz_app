@@ -1,14 +1,14 @@
-// // import { synonymMap } from "./synonym.map.js";
+import { synonymMap } from "./synonym.map.js";
 
-// // export const normalizeInput = (input) => {
-// //   const term = input.toLowerCase().trim();
-// //   for (const key in synonymMap) {
-// //     if (synonymMap[key].includes(term) || key === term) {
-// //       return key;
-// //     }
-// //   }
-// //   return term;
-// // };
+export const normalizeInput = (input) => {
+  const term = input.toLowerCase().trim();
+  for (const key in synonymMap) {
+    if (synonymMap[key].includes(term) || key === term) {
+      return key;
+    }
+  }
+  return term;
+};
 
 
 
@@ -56,24 +56,24 @@
 //   return term;
 // };
 
-import { synonymMap } from "./synonym.map.js";
+// import { synonymMap } from "./synonym.map.js";
 
 /**
  * Maps a user-entered subcategory like "Flights" to internal key like "flight"
  * within the context of the selected main category (e.g., "travel").
  */
-export const findSubCategoryKey = (mainCategory = "", userInput = "") => {
-  const category = mainCategory.toLowerCase().trim();
-  const input = userInput.toLowerCase().trim();
+// export const findSubCategoryKey = (mainCategory = "", userInput = "") => {
+//   const category = mainCategory.toLowerCase().trim();
+//   const input = userInput.toLowerCase().trim();
 
-  const subMap = synonymMap[category];
-  if (!subMap) return input;
+//   const subMap = synonymMap[category];
+//   if (!subMap) return input;
 
-  for (const subKey in subMap) {
-    if (subMap[subKey].includes(input)) {
-      return subKey; // ✅ 'Flights' → 'flight'
-    }
-  }
+//   for (const subKey in subMap) {
+//     if (subMap[subKey].includes(input)) {
+//       return subKey; // ✅ 'Flights' → 'flight'
+//     }
+//   }
 
-  return input; // fallback if no match
-};
+//   return input; // fallback if no match
+// };
