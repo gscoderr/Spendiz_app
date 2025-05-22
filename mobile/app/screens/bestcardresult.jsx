@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  Image,
 } from 'react-native';
 
-import { useBestCard } from '../../context/bestcard.context.js';
+import { useBestCard } from '../../context/bestcard.context';
 import { useLocalSearchParams } from 'expo-router';
-import SavedCard from '../component/savedcard.jsx'; // Your custom visual card
+import SavedCard from '../component/savedcard.jsx';
 
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
@@ -45,7 +44,7 @@ export default function CardBenefitsScreen() {
 
         {bestCards.map((card, index) => (
           <View key={index} style={{ marginBottom: 28 }}>
-            {/* Card Image / Visual */}
+            {/* CARD UI */}
             <SavedCard
               card={{
                 bankName: card.bank,
@@ -53,59 +52,41 @@ export default function CardBenefitsScreen() {
                 network: card.network,
                 tier: card.tier,
                 last4Digits: "XXXX",
+                cardHolderName: "You", // Optional: can come from backend
               }}
             />
 
-            {/* Amount Benefit */}
+            {/* AMOUNT BENEFIT BOX */}
             <View style={styles.amountBox}>
               <Text style={styles.amount}>₹{card.benefitValue?.toFixed(2)}</Text>
-              <Text style={styles.amountDesc}>Amount you earned</Text>
+              <Text style={styles.amountDesc}>
+                Earned via {card.rewardType === "cashback" ? "Cashback" : "Reward Points"}
+              </Text>
             </View>
 
-            {/* Partner Offers */}
-            {card.partnerOffers?.length > 0
-              ? card.partnerOffers.map((offer, idx) => (
-                  <View key={idx} style={styles.offerCard}>
-                    <View style={styles.offerLeft}>
-                      <View style={[styles.circleLogo, { backgroundColor: idx % 2 === 0 ? '#0CA789' : '#1F1F35' }]} />
-                      <View>
-                        <Text style={styles.offerTitle}>
-                          {offer.brand || "Co-partner offer"}
-                        </Text>
-                        <Text style={styles.offerDescription}>
-                          {offer.description || "Discount applicable"}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity>
-                      <Text style={styles.redeemBtn}>Redeem</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              : (
-                <View style={styles.offerCard}>
-                  <View style={styles.offerLeft}>
-                    <View style={styles.circleLogo} />
-                    <View>
-                      <Text style={styles.offerTitle}>
-                        {Array.isArray(card.coPartnerBrands)
-                          ? card.coPartnerBrands.join(", ")
-                          : card.coPartnerBrands || "Partner Offer"}
-                      </Text>
-                      <Text style={styles.offerDescription}>
-                        {card.benefitDetails || "Benefit details not available"}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity>
-                    <Text style={styles.redeemBtn}>Redeem</Text>
-                  </TouchableOpacity>
+            {/* OFFER SECTION */}
+            <View style={styles.offerCard}>
+              <View style={styles.offerLeft}>
+                <View style={styles.circleLogo} />
+                <View>
+                  <Text style={styles.offerTitle}>
+                    {Array.isArray(card.coPartnerBrands)
+                      ? card.coPartnerBrands.join(", ")
+                      : card.coPartnerBrands || "Partner Offer"}
+                  </Text>
+                  <Text style={styles.offerDescription}>
+                    {card.benefitDetails || "Benefit details not available"}
+                  </Text>
                 </View>
-              )}
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.redeemBtn}>Redeem</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
 
-        {/* Suggestions Section */}
+        {/* SUGGESTIONS SECTION */}
         {suggestions.length > 0 && (
           <View style={styles.suggestionBox}>
             <Text style={styles.suggestionTitle}>💡 Suggestions You May Like:</Text>

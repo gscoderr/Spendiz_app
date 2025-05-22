@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Image } from "react-native-expo-image-cache"; // ✅ Lazy loading
+import { View, Text, StyleSheet, Image } from "react-native";
 
 export default function SavedCard({ card }) {
   if (!card) return null;
@@ -14,29 +13,31 @@ export default function SavedCard({ card }) {
         return require("../../assets/banks/visa_sign.png");
       case "rupay":
         return require("../../assets/banks/rupay.png");
-      // default:  
-        // return require("../../assets/banks/default.png");
+      default:
+        return null;
     }
   };
 
   return (
     <View style={styles.card}>
+      {/* Top row - Bank & Card Name */}
       <View style={styles.row}>
         <Text style={styles.bankName}>{card?.bankName}</Text>
         <Text style={styles.cardName}>{card?.cardName}</Text>
       </View>
 
+      {/* Chip */}
       <View style={styles.chip} />
+
+      {/* Card Number */}
       <Text style={styles.cardNumber}>•••• •••• •••• {card?.last4Digits}</Text>
 
+      {/* Bottom row - Holder Name & Logo */}
       <View style={styles.bottomRow}>
-        <Text style={styles.cardHolder}>Your Name</Text>
-        <Image
-          style={styles.logo}
-          preview={{ uri: "" }} // placeholder (optional)
-          uri=""
-          {...getCardLogo(card?.network)} // ✅ fallback for local require
-        />
+        <Text style={styles.cardHolder}>{card?.cardHolderName || "Cardholder"}</Text>
+        {card?.network && (
+          <Image source={getCardLogo(card.network)} style={styles.logo} />
+        )}
       </View>
     </View>
   );
@@ -44,7 +45,7 @@ export default function SavedCard({ card }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#1BC6B4",
+    backgroundColor: "#0E1D59", // deep navy blue
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -53,29 +54,31 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   bankName: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "600",
   },
   cardName: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "500",
   },
   chip: {
     width: 40,
-    height: 28,
-    backgroundColor: "#ccc",
+    height: 30,
+    backgroundColor: "#cccccc",
     borderRadius: 6,
-    marginTop: 20,
+    marginTop: 24,
+    marginBottom: 16,
   },
   cardNumber: {
-    marginTop: 20,
     color: "#fff",
     fontSize: 20,
-    letterSpacing: 2,
+    letterSpacing: 3,
+    fontWeight: "500",
   },
   bottomRow: {
     marginTop: 20,
@@ -86,10 +89,11 @@ const styles = StyleSheet.create({
   cardHolder: {
     color: "#fff",
     fontSize: 14,
+    fontWeight: "400",
   },
   logo: {
     width: 40,
-    height: 24,
+    height: 28,
     resizeMode: "contain",
   },
 });
