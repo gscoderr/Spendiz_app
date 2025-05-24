@@ -26,6 +26,10 @@ const otherBanks = [
   { name: 'AMEX', icon: require('../../assets/banks/amex.png') },
   { name: 'SCB', icon: require('../../assets/banks/SCB.png') },
   { name: 'FEDERAL BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
+  { name: 'CITI BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
+  { name: 'STANDARD CHARTERED', icon: require('../../assets/banks/federal_bank.jpeg') },
+  { name: 'BANK OF BARODA', icon: require('../../assets/banks/federal_bank.jpeg') },
+  // { name: 'FEDERAL BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
   // Add more as needed
 ];
 
