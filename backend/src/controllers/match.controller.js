@@ -5,6 +5,8 @@ import MasterCard from "../models/mastercards.model.js";
 import Fuse from "fuse.js";
 import { normalizeInput } from "../utils/normalizeInput.js";
 
+import testCards from "../seed/sample_mastercards_10cards.json" assert { type: "json" };
+
 export const matchBestCard = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { category, subCategory, amount } = req.query;
@@ -47,7 +49,8 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         .split(",")
         .map((s) => normalizeInput(s.trim()));
 
-      if (!subCats.includes(normalizedSubCategory)) continue;
+  const isMatch = subCats.includes(normalizedSubCategory);
+  if (!isMatch) continue;
 
       // Core fields from offer
       const cashback = parseFloat(offer.cashback ?? 0);
