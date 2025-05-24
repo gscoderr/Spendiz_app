@@ -22,8 +22,6 @@ import TopBar from "../component/topbar.jsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
-
-
 export default function CreditCards() {
   const router = useRouter();
   const [cards, setCards] = useState([]);
@@ -94,7 +92,6 @@ export default function CreditCards() {
               if (res.status === 200) {
                 setCards((prev) => prev.filter((c) => c._id !== cardId));
                 setLongPressedCardId(null);
-
               }
             } catch (err) {
               console.error("❌ Delete failed:", err.message);
@@ -109,7 +106,6 @@ export default function CreditCards() {
   };
 
   const handleUpdate = async (cardId) => {
-
     Alert.alert(
       "Edit Card",
       "Do you want to edit this card?",
@@ -134,10 +130,7 @@ export default function CreditCards() {
       ],
       { cancelable: true }
     );
-  }
-
-
-
+  };
 
   const handleScroll = () => {
     if (sortModalVisible) setSortModalVisible(false);
