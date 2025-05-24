@@ -67,67 +67,140 @@ export default function CategoryForm() {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     console.log("🚀 SUBMIT — Category:", category, "| SubCategory:", subCategory);
+
+  //     let spendAmount = 0;
+
+  //     if (category === "travel") {
+  //       if (!from || !to || !persons || !budget) {
+  //         alert("Please fill all travel fields.");
+  //         return;
+  //       }
+  //       spendAmount = parseFloat(budget);
+  //     } else if (["shopping", "dining"].includes(category)) {
+  //       if (!amount) {
+  //         alert("Please enter spend amount.");
+  //         return;
+  //       }
+  //       spendAmount = parseFloat(amount);
+  //     } else if (category === "entertainment") {
+  //       if (!movie || !location) {
+  //         alert("Please enter movie name and location.");
+  //         return;
+  //       }
+  //       spendAmount = 1000; // Placeholder default
+  //     }
+
+  //     if (isNaN(spendAmount) || spendAmount <= 0) {
+  //       alert("Invalid amount.");
+  //       return;
+  //     }
+
+  //     const res = await api.get("/match/best-card", {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       params: {
+  //         category,
+  //         subCategory,
+  //         amount: spendAmount,
+  //       },
+  //     });
+
+  //     if (res.data.success && res.data.bestCards) {
+  //       setBestCard(res.data.bestCards);
+  //       router.push("/screens/bestcardresult");
+  //     } else if (res.data.suggestions) {
+  //       router.push({
+  //         pathname: "/screens/bestcardresult",
+  //         params: {
+  //           suggestions: JSON.stringify(res.data.suggestions),
+  //         },
+  //       });
+  //     } else {
+  //       alert("No matching card found.");
+  //     }
+
+  //   } catch (err) {
+  //     console.error("❌ Match Error:", err?.message);
+  //     alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
+  //   }
+  // };
+
   const handleSubmit = async () => {
-    try {
-      console.log("🚀 SUBMIT — Category:", category, "| SubCategory:", subCategory);
+  try {
+    console.debug("🟡 SUBMIT pressed", { category, subCategory });
 
-      let spendAmount = 0;
+    let spendAmount = 0;
 
-      if (category === "travel") {
-        if (!from || !to || !persons || !budget) {
-          alert("Please fill all travel fields.");
-          return;
-        }
-        spendAmount = parseFloat(budget);
-      } else if (["shopping", "dining"].includes(category)) {
-        if (!amount) {
-          alert("Please enter spend amount.");
-          return;
-        }
-        spendAmount = parseFloat(amount);
-      } else if (category === "entertainment") {
-        if (!movie || !location) {
-          alert("Please enter movie name and location.");
-          return;
-        }
-        spendAmount = 1000; // Placeholder default
-      }
-
-      if (isNaN(spendAmount) || spendAmount <= 0) {
-        alert("Invalid amount.");
+    if (category === "travel") {
+      if (!from || !to || !persons || !budget) {
+        alert("Please fill all travel fields.");
         return;
       }
+      spendAmount = parseFloat(budget);
+    } else if (["shopping", "dining"].includes(category)) {
+      if (!amount) {
+        alert("Please enter spend amount.");
+        return;
+      }
+      spendAmount = parseFloat(amount);
+    } else if (category === "entertainment") {
+      if (!movie || !location) {
+        alert("Please enter movie name and location.");
+        return;
+      }
+      spendAmount = 1000;
+    }
 
-      const res = await api.get("/match/best-card", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    if (isNaN(spendAmount) || spendAmount <= 0) {
+      alert("Invalid amount.");
+      return;
+    }
+
+    console.debug("📤 API call sending →", {
+      category,
+      subCategory,
+      amount: spendAmount,
+    });
+
+    const res = await api.get("/match/best-card", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: {
+        category,
+        subCategory,
+        amount: spendAmount,
+      },
+    });
+
+    console.debug("✅ API Response Received:", res.data);
+
+    if (res.data.success && res.data.bestCards) {
+      setBestCard(res.data.bestCards);
+      console.debug("🟢 bestCards set in context:", res.data.bestCards);
+      router.push("/screens/bestcardresult");
+    } else if (res.data.suggestions) {
+      console.debug("🟠 No match, suggestions available:", res.data.suggestions);
+      router.push({
+        pathname: "/screens/bestcardresult",
         params: {
-          category,
-          subCategory,
-          amount: spendAmount,
+          suggestions: JSON.stringify(res.data.suggestions),
         },
       });
-
-      if (res.data.success && res.data.bestCards) {
-        setBestCard(res.data.bestCards);
-        router.push("/screens/bestcardresult");
-      } else if (res.data.suggestions) {
-        router.push({
-          pathname: "/screens/bestcardresult",
-          params: {
-            suggestions: JSON.stringify(res.data.suggestions),
-          },
-        });
-      } else {
-        alert("No matching card found.");
-      }
-
-    } catch (err) {
-      console.error("❌ Match Error:", err?.message);
-      alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
+    } else {
+      console.warn("❌ No match or suggestion found.");
+      alert("No matching card found.");
     }
-  };
+
+  } catch (err) {
+    console.error("❌ API Error:", err?.message);
+    alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
+  }
+};
 
   return (
     <View style={styles.container}>

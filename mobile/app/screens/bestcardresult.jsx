@@ -17,9 +17,16 @@ export default function CardBenefitsScreen() {
   const params = useLocalSearchParams();
   const [suggestions, setSuggestions] = useState([]);
 
+  console.debug("📦 bestCards loaded in screen:", bestCards);
+console.debug("📨 suggestions param received:", params?.suggestions);
+
+
+console.debug("🧾 Rendering bestCards:");
+
   useEffect(() => {
     if (params?.suggestions) {
       try {
+        console.debug("📨 Parsing suggestions:", params.suggestions);
         setSuggestions(JSON.parse(params.suggestions));
       } catch (err) {
         console.warn("❌ Failed to parse suggestions", err);
@@ -34,7 +41,9 @@ export default function CardBenefitsScreen() {
       </View>
     );
   }
-
+      // tumhara wala ok hai ya nhi likho
+      // kha gya haa
+      // mera code ruuning me hai
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>

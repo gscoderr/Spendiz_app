@@ -290,7 +290,7 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import Card from "../models/card.model.js";
-import MasterCard from "../models/mastercards.model.js";
+import CardOffer from "../models/cardoffers.model.js";
 import Fuse from "fuse.js";
 
 import { normalizeInput } from "../utils/normalizeInput.js";
@@ -342,8 +342,7 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         .split(",")
         .map((s) => normalizeInput(s.trim()));
 
-      const isMatch = subCats.includes(normalizedSubCategory);
-      if (!isMatch) continue;
+      if (!subCats.includes(normalizedSubCategory)) continue;
 
       const rewardType = offer.cashback ? "cashback" : "reward points";
       const rate = parseFloat(offer.cashback ?? offer.rewardRate ?? 0);
@@ -360,16 +359,16 @@ export const matchBestCard = asyncHandler(async (req, res) => {
           : Math.min(rawBenefit, offer.maxLimitRewardPoints || rawBenefit);
 
       matches.push({
-        cardName: master.cardName,
-        bank: master.bank,
-        network: master.network,
-        tier: master.tier,
+        cardName: offer.cardName,
+        bank: offer.bank,
+        network: offer.network,
+        tier: offer.tier,
         rewardType,
         cashback: offer.cashback,
         rewardRate: offer.rewardRate,
         rewardPointValue: offer.rewardPointValue,
         benefitValue,
-        benefitDetails: offer.benefit,
+        benefitDetails: offer.benefitDetails,
         coPartnerBrands: offer.coPartnerBrands,
         tnc: offer.tnc,
         remarks: master.remarks,
