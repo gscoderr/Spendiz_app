@@ -42,7 +42,7 @@ export default function CardBenefitsScreen() {
       </View>
     );
   }
-  // push 
+  // push push
 
 
   return (
