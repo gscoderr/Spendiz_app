@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, KeyboardAvoidingView, Platform
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import api from "../../utils/axiosInstance.js";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,7 +33,14 @@ export default function AddCard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const popularBanks = [
-    "HDFC Bank", "SBI", "ICICI", "AXIS", "KOTAK", "RBL", "INDUSIND", "IDFC"
+    "HDFC Bank",
+    "SBI",
+    "ICICI",
+    "AXIS",
+    "KOTAK",
+    "RBL",
+    "INDUSIND",
+    "IDFC",
   ];
 
   // 🔁 Fetch all banks from backend
@@ -38,7 +51,10 @@ export default function AddCard() {
         console.log("✅ Banks from backend:", res.data);
         setAllBanks(res.data);
       } catch (err) {
-        console.error("❌ Error fetching banks:", err?.response?.data || err.message);
+        console.error(
+          "❌ Error fetching banks:",
+          err?.response?.data || err.message
+        );
         Alert.alert("Error", "Failed to fetch banks");
       }
     };
@@ -57,7 +73,7 @@ export default function AddCard() {
           }
           const items = res.data.map((card) => ({
             label: card,
-            value: card
+            value: card,
           }));
           setCardNameOptions(items);
         } catch (err) {
@@ -75,7 +91,10 @@ export default function AddCard() {
     const fetchCardDetails = async () => {
       if (bank && cardName && allBanks.includes(bank)) {
         try {
-          const res = await api.get(`/cards/card-details`, { params: { bank, cardName } });
+          const res = await api.get(`/cards/card-details`, {
+            params: { bank, cardName },
+          });
+          // console.log("not select network",res.data.network);
           setNetwork(res.data.network || "");
           setTier(res.data.tier || "");
         } catch (err) {
@@ -118,22 +137,74 @@ export default function AddCard() {
     }
   };
 
+  // const handleSave = async () => {
+  //   if (
+  //     !bank ||
+  //     !cardName ||
+  //     !network ||
+  //     !tier ||
+  //     !last4Digits ||
+  //     !cardHolderName
+  //   ) {
+  //     return Alert.alert("Please fill all fields");
+  //   }
+
+  //   const newCard = {
+  //     bankName: bank,
+  //     cardName,
+  //     network,
+  //     tier,
+  //     last4Digits,
+  //     cardHolderName,
+  //   };
+
+  //   try {
+  //     const res = await api.post(`/cards/add`, newCard);
+
+  //     if (res.data.success) {
+  //       Alert.alert("Success", "Card added successfully");
+
+  //       // ✅ Optional: If you’re using context locally
+  //       // setUserSavedCards((prev) => [...prev, newCard]);
+
+  //       // Reset fields
+  //       setBank("");
+  //       setCardName(null);
+  //       setNetwork("");
+  //       setTier("");
+  //       setCardHolderName("");
+  //       setLast4Digits("");
+  //       router.replace("/dashboard");
+  //     } else {
+  //       Alert.alert("Error", res.data.message || "Failed to add card");
+  //     }
+  //   } catch (err) {
+  //     console.error(
+  //       "❌ Failed to save card:",
+  //       err?.response?.data || err.message
+  //     );
+  //     Alert.alert("Error", "Failed to save card");
+  //   }
+  // };
+
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <View style={styles.container}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-         <Text style={styles.label}>Select Bank</Text>
-          <TouchableOpacity onPress={() => setShowBankModal(true)} style={styles.dropdown}>
-            <Text>{bank || "Tap to select your bank"}</Text>
-          </TouchableOpacity>
-
+        <Text style={styles.label}>Select Bank</Text>
+        <TouchableOpacity
+          onPress={() => setShowBankModal(true)}
+          style={styles.dropdown}
+        >
+          <Text>{bank || "Tap to select your bank"}</Text>
+        </TouchableOpacity>
 
         {/* 🚫 Move DropDownPicker OUTSIDE scroll to avoid nesting issue */}
         <Text style={styles.label}>Select Card Name</Text>
@@ -142,12 +213,12 @@ export default function AddCard() {
           value={cardName}
           items={cardNameOptions}
           setOpen={setDropdownOpen}
-          setValue={setCardName}
+          setValue={(val) => setCardName(val)}
           setItems={setCardNameOptions}
           searchable={true}
           placeholder="Select card name"
           style={styles.dropdownPicker}
-          dropDownContainerStyle={{ borderColor: '#ccc' }}
+          dropDownContainerStyle={{ borderColor: "#ccc" }}
           zIndex={5000}
           zIndexInverse={1000}
           disabled={!allBanks.includes(bank)}
@@ -158,9 +229,8 @@ export default function AddCard() {
           enableOnAndroid
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom:3 }}
+          contentContainerStyle={{ paddingBottom: 3 }}
         >
-         
           {/* All inputs */}
           <Text style={styles.label}>Network</Text>
           <TextInput
@@ -212,7 +282,10 @@ export default function AddCard() {
               setNetwork("");
               setTier("");
             } else {
-              Alert.alert("Coming Soon!", `We're working to add ${selectedBank} soon.`);
+              Alert.alert(
+                "Coming Soon!",
+                `We're working to add ${selectedBank} soon.`
+              );
             }
             setShowBankModal(false);
           }}
@@ -220,13 +293,16 @@ export default function AddCard() {
         />
       </View>
     </KeyboardAvoidingView>
-
-
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#0D0D2B", flex: 1, paddingTop: 60 },
+  container: {
+    padding: 16,
+    backgroundColor: "#0D0D2B",
+    flex: 1,
+    paddingTop: 60,
+  },
   backBtn: { marginBottom: 16, alignSelf: "flex-start" },
   label: { fontWeight: "bold", marginTop: 10, marginBottom: 5, color: "#fff" },
   dropdown: {

@@ -7,6 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
+} from "react-native";
 
 import { useBestCard } from "../../context/bestcard.context";
 import { useLocalSearchParams } from "expo-router";
@@ -14,6 +15,7 @@ import SavedCard from "../component/savedcard.jsx";
 
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
+  const { userSavedCards } = useUser();
   const params = useLocalSearchParams();
   const [suggestions, setSuggestions] = useState([]);
 
@@ -25,7 +27,6 @@ export default function CardBenefitsScreen() {
   useEffect(() => {
     if (params?.suggestions) {
       try {
-        console.debug("📨 Parsing suggestions:", params.suggestions);
         setSuggestions(JSON.parse(params.suggestions));
       } catch (err) {
         console.warn("❌ Failed to parse suggestions", err);
@@ -40,6 +41,7 @@ export default function CardBenefitsScreen() {
       </View>
     );
   }
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -73,36 +75,44 @@ export default function CardBenefitsScreen() {
               </Text>
             </View>
 
-            {/* OFFER SECTION */}
-            <View style={styles.offerCard}>
-              <View style={styles.offerLeft}>
-                <View style={styles.circleLogo} />
-                <View>
-                  <Text style={styles.offerTitle}>
-                    {Array.isArray(card.coPartnerBrands)
-                      ? card.coPartnerBrands.join(", ")
-                      : card.coPartnerBrands || "Partner Offer"}
-                  </Text>
-                  <Text style={styles.offerDescription}>
-                    {card.benefitDetails || "Benefit details not available"}
-                  </Text>
+              <View style={styles.offerCard}>
+                <View style={styles.offerLeft}>
+                  <View style={styles.circleLogo} />
+                  <View>
+                    <Text style={styles.offerTitle}>
+                      {Array.isArray(card.coPartnerBrands)
+                        ? card.coPartnerBrands.join(", ")
+                        : card.coPartnerBrands || "Partner Offer"}
+                    </Text>
+                    <Text style={styles.offerDescription}>
+                      {card.benefitDetails || "Benefit details not available"}
+                    </Text>
+                  </View>
                 </View>
+                <TouchableOpacity>
+                  <Text style={styles.redeemBtn}>Redeem</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity>
-                <Text style={styles.redeemBtn}>Redeem</Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        ))}
+          )
+      )}
 
-        {/* SUGGESTIONS SECTION */}
         {suggestions.length > 0 && (
           <View style={styles.suggestionBox}>
             <Text style={styles.suggestionTitle}>
               💡 Suggestions You May Like:
             </Text>
+            <Text style={styles.suggestionTitle}>
+              💡 Suggestions You May Like:
+            </Text>
             {suggestions.map((s, index) => (
               <View key={index} style={styles.suggestionItem}>
+                <Text style={styles.suggestionText}>
+                  {s.cardName} — {s.bank}
+                </Text>
+                <Text style={styles.suggestionSub}>
+                  {s.spendCategory} → {s.subCategory}
+                </Text>
                 <Text style={styles.suggestionText}>
                   {s.cardName} — {s.bank}
                 </Text>
@@ -130,6 +140,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 18,
   },
   amountBox: {
@@ -137,32 +149,48 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: "center",
+    alignItems: "center",
     marginBottom: 20,
   },
   amount: {
     fontSize: 30,
     fontWeight: "bold",
     color: "#fff",
+    fontWeight: "bold",
+    color: "#fff",
   },
   amountDesc: {
+    color: "#fff",
     color: "#fff",
     fontSize: 14,
     marginTop: 6,
   },
+  secondaryText: {
+    color: "#FFFAD4",
+    fontSize: 12,
+    marginTop: 4,
+  },
   offerCard: {
+    backgroundColor: "#fff",
     backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 14,
+    shadowColor: "#000",
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
   },
   offerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
@@ -173,27 +201,35 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 12,
     backgroundColor: "#ccc",
+    backgroundColor: "#ccc",
   },
   offerTitle: {
+    fontWeight: "600",
     fontWeight: "600",
     fontSize: 15,
   },
   offerDescription: {
+    color: "#777",
     color: "#777",
     fontSize: 12,
   },
   redeemBtn: {
     color: "#0057E7",
     fontWeight: "bold",
+    color: "#0057E7",
+    fontWeight: "bold",
     paddingLeft: 12,
   },
   errorText: {
     textAlign: "center",
+    textAlign: "center",
     fontSize: 18,
     marginTop: 40,
     color: "#777",
+    color: "#777",
   },
   suggestionBox: {
+    backgroundColor: "#1F1F35",
     backgroundColor: "#1F1F35",
     padding: 16,
     borderRadius: 12,
@@ -201,7 +237,9 @@ const styles = StyleSheet.create({
   },
   suggestionTitle: {
     color: "#00FFC2",
+    color: "#00FFC2",
     fontSize: 16,
+    fontWeight: "600",
     fontWeight: "600",
     marginBottom: 10,
   },
@@ -209,15 +247,30 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#333",
+    borderBottomColor: "#333",
   },
   suggestionText: {
     color: "#fff",
+    color: "#fff",
     fontSize: 14,
+    fontWeight: "600",
     fontWeight: "600",
   },
   suggestionSub: {
     color: "#aaa",
+    color: "#aaa",
     fontSize: 12,
     marginTop: 2,
+  },
+  amountLine: {
+    color: "#fff",
+    fontSize: 14,
+    marginVertical: 2,
+  },
+  amountTotal: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: 8,
   },
 });

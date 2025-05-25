@@ -186,7 +186,7 @@ export default function CategoryForm() {
     } else if (res.data.suggestions) {
       console.debug("🟠 No match, suggestions available:", res.data.suggestions);
       router.push({
-        pathname: "/screens/bestcardresult",
+        pathname: "/tabs/cardbenefits",
         params: {
           suggestions: JSON.stringify(res.data.suggestions),
         },
