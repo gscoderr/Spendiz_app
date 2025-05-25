@@ -7,11 +7,12 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
-} from "react-native";
 
-import { useBestCard } from "../../context/bestcard.context";
+
+import { useBestCard } from "../../context/bestcard.context.js";
 import { useLocalSearchParams } from "expo-router";
 import SavedCard from "../component/savedcard.jsx";
+import { useUser } from "../../context/user.context.js";
 
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
