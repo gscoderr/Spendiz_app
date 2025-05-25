@@ -80,6 +80,8 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         maxLimitCashback: offer.maxLimitCashback,
         remarks: master.remarks,
         benefitValue, // total value for sorting
+        cardHolderName: userCard.cardHolderName,
+        last4Digits: userCard.last4Digits,
       });
     }
   }
@@ -101,14 +103,12 @@ export const matchBestCard = asyncHandler(async (req, res) => {
   const flatSubCategories = allMasters.flatMap((master) => {
     const categoryOffers = master[normalizedCategory] || [];
     return categoryOffers.flatMap((offer) =>
-      (offer.subCategory || "")
-        .split(",")
-        .map((sub) => ({
-          subCategory: sub.trim(),
-          bank: master.bank,
-          cardName: master.cardName,
-          spendCategory: normalizedCategory,
-        }))
+      (offer.subCategory || "").split(",").map((sub) => ({
+        subCategory: sub.trim(),
+        bank: master.bank,
+        cardName: master.cardName,
+        spendCategory: normalizedCategory,
+      }))
     );
   });
 
