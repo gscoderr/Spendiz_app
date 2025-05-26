@@ -20,9 +20,11 @@ export default function CategoryForm() {
   const router = useRouter();
   const { setBestCard } = useBestCard();
   const { token } = useUser();
+ 
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [date, setDate] = useState(""); // ✅ Added
   const [persons, setPersons] = useState("");
   const [budget, setBudget] = useState("");
   const [amount, setAmount] = useState("");
@@ -35,8 +37,9 @@ export default function CategoryForm() {
       case "travel":
         return (
           <>
-            <TextInput style={styles.input} placeholder="From" value={from} onChangeText={setFrom} />
-            <TextInput style={styles.input} placeholder="To" value={to} onChangeText={setTo} />
+            <TextInput style={styles.input} placeholder="From (e.g. DEL)" value={from} onChangeText={setFrom} />
+            <TextInput style={styles.input} placeholder="To (e.g. BOM)" value={to} onChangeText={setTo} />
+            <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
             <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
             <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
           </>
@@ -96,6 +99,10 @@ export default function CategoryForm() {
         spendAmount = 1000;
       }
 
+      if (isNaN(spendAmount) || spendAmount <= 0) {
+        alert("Invalid amount.");
+        return;
+      }
       if (isNaN(spendAmount) || spendAmount <= 0) {
         alert("Invalid amount.");
         return;
