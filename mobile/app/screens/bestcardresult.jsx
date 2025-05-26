@@ -8,7 +8,6 @@ import {
   SafeAreaView,
 } from "react-native";
 
-
 import { useBestCard } from "../../context/bestcard.context.js";
 import { useLocalSearchParams } from "expo-router";
 import SavedCard from "../component/savedcard.jsx";
@@ -44,7 +43,6 @@ export default function CardBenefitsScreen() {
   }
   // push push
 
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -77,27 +75,26 @@ export default function CardBenefitsScreen() {
               </Text>
             </View>
 
-              <View style={styles.offerCard}>
-                <View style={styles.offerLeft}>
-                  <View style={styles.circleLogo} />
-                  <View>
-                    <Text style={styles.offerTitle}>
-                      {Array.isArray(card.coPartnerBrands)
-                        ? card.coPartnerBrands.join(", ")
-                        : card.coPartnerBrands || "Partner Offer"}
-                    </Text>
-                    <Text style={styles.offerDescription}>
-                      {card.benefitDetails || "Benefit details not available"}
-                    </Text>
-                  </View>
+            <View style={styles.offerCard}>
+              <View style={styles.offerLeft}>
+                <View style={styles.circleLogo} />
+                <View>
+                  <Text style={styles.offerTitle}>
+                    {Array.isArray(card.coPartnerBrands)
+                      ? card.coPartnerBrands.join(", ")
+                      : card.coPartnerBrands || "Partner Offer"}
+                  </Text>
+                  <Text style={styles.offerDescription}>
+                    {card.benefitDetails || "Benefit details not available"}
+                  </Text>
                 </View>
-                <TouchableOpacity>
-                  <Text style={styles.redeemBtn}>Redeem</Text>
-                </TouchableOpacity>
               </View>
+              <TouchableOpacity>
+                <Text style={styles.redeemBtn}>Redeem</Text>
+              </TouchableOpacity>
             </View>
-          )
-      )}
+          </View>
+        ))}
 
         {suggestions.length > 0 && (
           <View style={styles.suggestionBox}>
