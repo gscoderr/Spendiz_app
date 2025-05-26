@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TopBar from "../component/topbar";
 import { useBestCard } from "../../context/bestcard.context";
-import { useUser } from "../../context/user.context"; // ✅ Added
+import { useUser } from "../../context/user.context";
 import api from "../../utils/axiosInstance";
 
 export default function CategoryForm() {
@@ -19,9 +19,8 @@ export default function CategoryForm() {
   const formattedCategory = category?.charAt(0).toUpperCase() + category?.slice(1);
   const router = useRouter();
   const { setBestCard } = useBestCard();
-  const { token } = useUser(); // ✅ Get auth token
+  const { token } = useUser();
 
-  // States for dynamic fields
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [persons, setPersons] = useState("");
@@ -57,8 +56,14 @@ export default function CategoryForm() {
             <TextInput style={styles.input} placeholder="Spend Amount (₹)" keyboardType="numeric" value={amount} onChangeText={setAmount} />
             <View style={styles.modeToggle}>
               {["Full", "EMI"].map((mode) => (
-                <TouchableOpacity key={mode} style={[styles.modeButton, paymentMode === mode && styles.modeSelected]} onPress={() => setPaymentMode(mode)}>
-                  <Text style={[styles.modeText, paymentMode === mode && styles.modeTextSelected]}>{mode}</Text>
+                <TouchableOpacity
+                  key={mode}
+                  style={[styles.modeButton, paymentMode === mode && styles.modeSelected]}
+                  onPress={() => setPaymentMode(mode)}
+                >
+                  <Text style={[styles.modeText, paymentMode === mode && styles.modeTextSelected]}>
+                    {mode}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -67,140 +72,77 @@ export default function CategoryForm() {
     }
   };
 
-  // const handleSubmit = async () => {
-  //   try {
-  //     console.log("🚀 SUBMIT — Category:", category, "| SubCategory:", subCategory);
-
-  //     let spendAmount = 0;
-
-  //     if (category === "travel") {
-  //       if (!from || !to || !persons || !budget) {
-  //         alert("Please fill all travel fields.");
-  //         return;
-  //       }
-  //       spendAmount = parseFloat(budget);
-  //     } else if (["shopping", "dining"].includes(category)) {
-  //       if (!amount) {
-  //         alert("Please enter spend amount.");
-  //         return;
-  //       }
-  //       spendAmount = parseFloat(amount);
-  //     } else if (category === "entertainment") {
-  //       if (!movie || !location) {
-  //         alert("Please enter movie name and location.");
-  //         return;
-  //       }
-  //       spendAmount = 1000; // Placeholder default
-  //     }
-
-  //     if (isNaN(spendAmount) || spendAmount <= 0) {
-  //       alert("Invalid amount.");
-  //       return;
-  //     }
-
-  //     const res = await api.get("/match/best-card", {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       params: {
-  //         category,
-  //         subCategory,
-  //         amount: spendAmount,
-  //       },
-  //     });
-
-  //     if (res.data.success && res.data.bestCards) {
-  //       setBestCard(res.data.bestCards);
-  //       router.push("/screens/bestcardresult");
-  //     } else if (res.data.suggestions) {
-  //       router.push({
-  //         pathname: "/screens/bestcardresult",
-  //         params: {
-  //           suggestions: JSON.stringify(res.data.suggestions),
-  //         },
-  //       });
-  //     } else {
-  //       alert("No matching card found.");
-  //     }
-
-  //   } catch (err) {
-  //     console.error("❌ Match Error:", err?.message);
-  //     alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
-  //   }
-  // };
-
   const handleSubmit = async () => {
-  try {
-    console.debug("🟡 SUBMIT pressed", { category, subCategory });
+    try {
+      let spendAmount = 0;
 
-    let spendAmount = 0;
+      if (category === "travel") {
+        if (!from || !to || !persons || !budget) {
+          alert("Please fill all travel fields.");
+          return;
+        }
+        spendAmount = parseFloat(budget);
+      } else if (["shopping", "dining"].includes(category)) {
+        if (!amount) {
+          alert("Please enter spend amount.");
+          return;
+        }
+        spendAmount = parseFloat(amount);
+      } else if (category === "entertainment") {
+        if (!movie || !location) {
+          alert("Please enter movie name and location.");
+          return;
+        }
+        spendAmount = 1000;
+      }
 
-    if (category === "travel") {
-      if (!from || !to || !persons || !budget) {
-        alert("Please fill all travel fields.");
+      if (isNaN(spendAmount) || spendAmount <= 0) {
+        alert("Invalid amount.");
         return;
       }
-      spendAmount = parseFloat(budget);
-    } else if (["shopping", "dining"].includes(category)) {
-      if (!amount) {
-        alert("Please enter spend amount.");
+
+      if (!token) {
+        alert("Login session expired. Please login again.");
         return;
       }
-      spendAmount = parseFloat(amount);
-    } else if (category === "entertainment") {
-      if (!movie || !location) {
-        alert("Please enter movie name and location.");
-        return;
-      }
-      spendAmount = 1000;
-    }
 
-    if (isNaN(spendAmount) || spendAmount <= 0) {
-      alert("Invalid amount.");
-      return;
-    }
-
-    console.debug("📤 API call sending →", {
-      category,
-      subCategory,
-      amount: spendAmount,
-    });
-
-    const res = await api.get("/match/best-card", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: {
+      console.log("📤 Sending to API:", {
         category,
         subCategory,
         amount: spendAmount,
-      },
-    });
+      });
 
-    console.debug("✅ API Response Received:", res.data);
-
-    if (res.data.success && res.data.bestCards) {
-      setBestCard(res.data.bestCards);
-      console.debug("🟢 bestCards set in context:", res.data.bestCards);
-      router.push("/screens/bestcardresult");
-    } else if (res.data.suggestions) {
-      console.debug("🟠 No match, suggestions available:", res.data.suggestions);
-      router.push({
-        pathname: "/tabs/cardbenefits",
+      const res = await api.get("/match/best-card", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         params: {
-          suggestions: JSON.stringify(res.data.suggestions),
+          category: category?.trim().toLowerCase(),
+          subCategory: subCategory?.trim().toLowerCase(),
+          amount: spendAmount,
         },
       });
-    } else {
-      console.warn("❌ No match or suggestion found.");
-      alert("No matching card found.");
-    }
 
-  } catch (err) {
-    console.error("❌ API Error:", err?.message);
-    alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
-  }
-};
+      const { bestCards, suggestions, success } = res.data;
+
+      if (success && bestCards?.length > 0) {
+        setBestCard(bestCards);
+        router.push("/screens/bestcardresult");
+      } else if (suggestions?.length > 0) {
+        router.push({
+          pathname: "/screens/bestcardresult",
+          params: {
+            suggestions: JSON.stringify(suggestions),
+          },
+        });
+      } else {
+        alert("No matching card found.");
+      }
+    } catch (err) {
+      console.error("❌ Error:", err?.message);
+      alert(err?.response?.data?.message || "Unable to find best card.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -220,14 +162,21 @@ export default function CategoryForm() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D2B", paddingTop: 40 },
-  form: { padding: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#0D0D2B",
+    paddingTop: 40,
+  },
+  form: {
+    padding: 20,
+  },
   title: {
     color: "#fff",
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 24,
+    textTransform: "capitalize",
   },
   input: {
     backgroundColor: "#fff",
@@ -271,3 +220,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+ 

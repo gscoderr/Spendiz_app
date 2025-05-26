@@ -28,12 +28,32 @@ export const matchBestCard = asyncHandler(async (req, res) => {
   const matches = [];
 
   for (const userCard of userCards) {
+    const normalizedBank = normalizeInput(userCard.bank);
+    const normalizedCardName = normalizeInput(userCard.cardName);
+
     const master = await CardOffer.findOne({
-      bank: new RegExp(`^${userCard.bank}$`, "i"),
-      cardName: new RegExp(`^${userCard.cardName}$`, "i"),
+      $expr: {
+        $and: [
+          {
+            $eq: [
+              { $toLower: "$bank" },
+              normalizedBank,
+            ],
+          },
+          {
+            $eq: [
+              { $toLower: "$cardName" },
+              normalizedCardName,
+            ],
+          },
+        ],
+      },
     });
 
-    if (!master || !master[normalizedCategory]) continue;
+    if (!master || !master[normalizedCategory]) {
+      console.log(`❌ No match for: ${userCard.bank} - ${userCard.cardName}`);
+      continue;
+    }
 
     const categoryOffers = master[normalizedCategory];
 
@@ -72,21 +92,24 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         rewardRate: offer.rewardRate,
         rewardPointValue: offer.rewardPointValue,
         cashbackPercent: offer.cashback,
-        cashbackValue: rewardType === "cashback" ? benefitValue : 0,
+        cashbackBenefitValue: rewardType === "cashback" ? benefitValue : 0,
+        rewardBenefitValue: rewardType === "reward points" ? benefitValue : 0,
+        totalBenefitValue: benefitValue,
         benefitDetails: offer.benefitDetails,
         coPartnerBrands: offer.coPartnerBrands,
         tnc: offer.tnc,
         maxLimitRewardPoints: offer.maxLimitRewardPoints,
         maxLimitCashback: offer.maxLimitCashback,
         remarks: master.remarks,
-        benefitValue, // total value for sorting
+        last4Digits: userCard.last4Digits,
+        cardHolderName: userCard.cardHolderName,
       });
     }
   }
 
   if (matches.length > 0) {
     const sortedMatches = matches
-      .sort((a, b) => b.benefitValue - a.benefitValue)
+      .sort((a, b) => b.totalBenefitValue - a.totalBenefitValue)
       .slice(0, 5);
 
     return res.status(200).json({
@@ -96,19 +119,19 @@ export const matchBestCard = asyncHandler(async (req, res) => {
     });
   }
 
-  // Fuzzy suggestions
+  // 🔍 Fuzzy fallback
   const allMasters = await CardOffer.find({});
   const flatSubCategories = allMasters.flatMap((master) => {
     const categoryOffers = master[normalizedCategory] || [];
     return categoryOffers.flatMap((offer) =>
-      (offer.subCategory || "")
-        .split(",")
-        .map((sub) => ({
-          subCategory: sub.trim(),
-          bank: master.bank,
-          cardName: master.cardName,
-          spendCategory: normalizedCategory,
-        }))
+      (offer.subCategory || "").split(",").map((sub) => ({
+        subCategory: sub.trim(),
+        bank: master.bank,
+        cardName: master.cardName,
+        spendCategory: normalizedCategory,
+        benefitDetails: offer.benefitDetails,
+        coPartnerBrands: offer.coPartnerBrands,
+      }))
     );
   });
 
