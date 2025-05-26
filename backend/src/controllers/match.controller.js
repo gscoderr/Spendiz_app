@@ -119,6 +119,7 @@ export const matchBestCard = asyncHandler(async (req, res) => {
 
   const suggestions = fuse.search(normalizedSubCategory).map((r) => r.item);
 
+  console.log("suggestions: ",suggestions)
   if (!suggestions.length) {
     throw new ApiError(
       404,

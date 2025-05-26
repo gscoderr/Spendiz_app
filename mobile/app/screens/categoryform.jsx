@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TopBar from "../component/topbar";
 import { useBestCard } from "../../context/bestcard.context";
-import { useUser } from "../../context/user.context"; // ✅ Added
+import { useUser } from "../../context/user.context";
 import api from "../../utils/axiosInstance";
 
 export default function CategoryForm() {
@@ -19,11 +19,12 @@ export default function CategoryForm() {
   const formattedCategory = category?.charAt(0).toUpperCase() + category?.slice(1);
   const router = useRouter();
   const { setBestCard } = useBestCard();
-  const { token } = useUser(); // ✅ Get auth token
+  const { token } = useUser();
 
-  // States for dynamic fields
+  // Dynamic Fields
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [date, setDate] = useState(""); // ✅ Added
   const [persons, setPersons] = useState("");
   const [budget, setBudget] = useState("");
   const [amount, setAmount] = useState("");
@@ -36,8 +37,9 @@ export default function CategoryForm() {
       case "travel":
         return (
           <>
-            <TextInput style={styles.input} placeholder="From" value={from} onChangeText={setFrom} />
-            <TextInput style={styles.input} placeholder="To" value={to} onChangeText={setTo} />
+            <TextInput style={styles.input} placeholder="From (e.g. DEL)" value={from} onChangeText={setFrom} />
+            <TextInput style={styles.input} placeholder="To (e.g. BOM)" value={to} onChangeText={setTo} />
+            <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
             <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
             <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
           </>
@@ -67,140 +69,78 @@ export default function CategoryForm() {
     }
   };
 
-  // const handleSubmit = async () => {
-  //   try {
-  //     console.log("🚀 SUBMIT — Category:", category, "| SubCategory:", subCategory);
-
-  //     let spendAmount = 0;
-
-  //     if (category === "travel") {
-  //       if (!from || !to || !persons || !budget) {
-  //         alert("Please fill all travel fields.");
-  //         return;
-  //       }
-  //       spendAmount = parseFloat(budget);
-  //     } else if (["shopping", "dining"].includes(category)) {
-  //       if (!amount) {
-  //         alert("Please enter spend amount.");
-  //         return;
-  //       }
-  //       spendAmount = parseFloat(amount);
-  //     } else if (category === "entertainment") {
-  //       if (!movie || !location) {
-  //         alert("Please enter movie name and location.");
-  //         return;
-  //       }
-  //       spendAmount = 1000; // Placeholder default
-  //     }
-
-  //     if (isNaN(spendAmount) || spendAmount <= 0) {
-  //       alert("Invalid amount.");
-  //       return;
-  //     }
-
-  //     const res = await api.get("/match/best-card", {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       params: {
-  //         category,
-  //         subCategory,
-  //         amount: spendAmount,
-  //       },
-  //     });
-
-  //     if (res.data.success && res.data.bestCards) {
-  //       setBestCard(res.data.bestCards);
-  //       router.push("/screens/bestcardresult");
-  //     } else if (res.data.suggestions) {
-  //       router.push({
-  //         pathname: "/screens/bestcardresult",
-  //         params: {
-  //           suggestions: JSON.stringify(res.data.suggestions),
-  //         },
-  //       });
-  //     } else {
-  //       alert("No matching card found.");
-  //     }
-
-  //   } catch (err) {
-  //     console.error("❌ Match Error:", err?.message);
-  //     alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
-  //   }
-  // };
-
   const handleSubmit = async () => {
-  try {
-    console.debug("🟡 SUBMIT pressed", { category, subCategory });
+    try {
+      console.debug("🟡 SUBMIT pressed", { category, subCategory });
 
-    let spendAmount = 0;
+      let spendAmount = 0;
 
-    if (category === "travel") {
-      if (!from || !to || !persons || !budget) {
-        alert("Please fill all travel fields.");
+      if (category === "travel") {
+        if (!from || !to || !date || !persons || !budget) {
+          alert("Please fill all travel fields including date.");
+          return;
+        }
+        spendAmount = parseFloat(budget);
+      } else if (["shopping", "dining"].includes(category)) {
+        if (!amount) {
+          alert("Please enter spend amount.");
+          return;
+        }
+        spendAmount = parseFloat(amount);
+      } else if (category === "entertainment") {
+        if (!movie || !location) {
+          alert("Please enter movie name and location.");
+          return;
+        }
+        spendAmount = 1000;
+      }
+
+      if (isNaN(spendAmount) || spendAmount <= 0) {
+        alert("Invalid amount.");
         return;
       }
-      spendAmount = parseFloat(budget);
-    } else if (["shopping", "dining"].includes(category)) {
-      if (!amount) {
-        alert("Please enter spend amount.");
-        return;
-      }
-      spendAmount = parseFloat(amount);
-    } else if (category === "entertainment") {
-      if (!movie || !location) {
-        alert("Please enter movie name and location.");
-        return;
-      }
-      spendAmount = 1000;
-    }
 
-    if (isNaN(spendAmount) || spendAmount <= 0) {
-      alert("Invalid amount.");
-      return;
-    }
-
-    console.debug("📤 API call sending →", {
-      category,
-      subCategory,
-      amount: spendAmount,
-    });
-
-    const res = await api.get("/match/best-card", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: {
+      const params = {
         category,
         subCategory,
         amount: spendAmount,
-      },
-    });
+      };
 
-    console.debug("✅ API Response Received:", res.data);
+      if (category === "travel") {
+        params.from = from;
+        params.to = to;
+        params.date = date;
+      }
 
-    if (res.data.success && res.data.bestCards) {
-      setBestCard(res.data.bestCards);
-      console.debug("🟢 bestCards set in context:", res.data.bestCards);
-      router.push("/screens/bestcardresult");
-    } else if (res.data.suggestions) {
-      console.debug("🟠 No match, suggestions available:", res.data.suggestions);
-      router.push({
-        pathname: "/tabs/cardbenefits",
-        params: {
-          suggestions: JSON.stringify(res.data.suggestions),
+      console.debug("📤 API call sending →", params);
+
+      const res = await api.get("/match/best-card", {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
+        params,
       });
-    } else {
-      console.warn("❌ No match or suggestion found.");
-      alert("No matching card found.");
-    }
 
-  } catch (err) {
-    console.error("❌ API Error:", err?.message);
-    alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
-  }
-};
+      console.debug("✅ API Response Received:", res.data);
+
+      if (res.data.success && res.data.bestCards) {
+        setBestCard(res.data.bestCards);
+        router.push("/screens/bestcardresult");
+      } else if (res.data.suggestions) {
+        router.push({
+          pathname: "/screens/bestcardresult",
+          params: {
+            suggestions: JSON.stringify(res.data.suggestions),
+          },
+        });
+      } else {
+        alert("No matching card found.");
+      }
+    } catch (err) {
+      console.error("❌ API Error:", err?.message);
+      alert(err?.response?.data?.message || "Unable to find best card. Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
