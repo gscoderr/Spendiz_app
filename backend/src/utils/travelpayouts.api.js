@@ -24,6 +24,8 @@ export const getFlightOffers = async (from, to, date) => {
       headers,
     });
 
+    console.log("✈️ Travel API response:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("🛑 Travel API error:", error.message);
