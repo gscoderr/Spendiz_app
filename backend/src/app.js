@@ -17,6 +17,8 @@ import authRouter from "./routes/auth.route.js";
 import matchRoutes from "./routes/match.route.js";
 import travelRoutes from "./routes/travel.route.js";
 import offersRoutes from "./routes/offer.route.js";
+import scraperRoutes from "./routes/scraper.route.js";
+
 
 // Route declarations
 app.use("/api/v1/auth", authRouter);
@@ -24,6 +26,7 @@ app.use("/api/v1/cards",cardRouter);
 app.use("/api/v1/match",matchRoutes);
 app.use("/api/v1/travel", travelRoutes);
 app.use("/api/v1/offers", offersRoutes);
+app.use("/api/v1/scraper", scraperRoutes);
 
 
 
