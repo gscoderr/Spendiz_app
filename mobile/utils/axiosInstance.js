@@ -5,13 +5,13 @@ import { jwtDecode } from 'jwt-decode';
 import Constants from 'expo-constants';
 
 // 🧠 Use manifest for better cross-platform compatibility
-const BASE_URL = 'http://192.168.1.34:5000';
+const BASE_URL = 'http://192.168.83.6:5000';
 console.log("✅ BASE_URL →", BASE_URL); // Debug log
 
 const api = axios.create({
     baseURL: `${BASE_URL}/api/v1`,
 });
-        // ho hya kya shi ho gya port galt hai shayad
+        
 
 // ✅ Request Interceptor
 api.interceptors.request.use(

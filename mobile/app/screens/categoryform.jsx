@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,7 +8,9 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TopBar from "../component/topbar";
 import { useBestCard } from "../../context/bestcard.context";
@@ -24,51 +27,134 @@ export default function CategoryForm() {
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [date, setDate] = useState(""); // ✅ Added
+  const [date, setDate] = useState("");
+  const [lowestPrice, setLowestPrice] = useState("");
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [persons, setPersons] = useState("");
   const [budget, setBudget] = useState("");
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("Full");
   const [movie, setMovie] = useState("");
   const [location, setLocation] = useState("");
+  const [deals, setDeals] = useState([]);
+  const [flightLink, setFlightLink] = useState("");
+
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const formatted = selectedDate.toISOString().split("T")[0];
+      setDate(formatted);
+    }
+  };
+
+  const fetchFlightDeals = async (from, to, date) => {
+    try {
+      const res = await api.get("/travel/flights", {
+        params: { from, to, date },
+      });
+      return res.data?.data || [];
+    } catch (err) {
+      console.error("❌ Error fetching flights:", err?.message);
+      return [];
+    }
+  };
+  useEffect(() => {
+    const valid = from.length === 3 && to.length === 3 && /^\d{4}-\d{2}-\d{2}$/.test(date);
+    if (!valid) return;
+
+    const delay = setTimeout(async () => {
+      const flights = await fetchFlightDeals(from.toUpperCase(), to.toUpperCase(), date);
+      console.log("🟢 Flights Fetched in useEffect:", flights); // ✅ ADD THIS
+      setDeals(flights);
+
+      if (flights.length > 0) {
+        setLowestPrice(flights[0]?.price?.toString());
+        setBudget(flights[0]?.price?.toString());
+        setFlightLink("https://www.aviasales.com" + flights[0]?.link);
+
+
+        console.log("✅ Top 3 Flight Deals:");
+        flights.slice(0, 3).forEach((deal, idx) => {
+          console.log(
+            `#${idx + 1} ✈ ${deal.origin} → ${deal.destination} | ₹${deal.price} | ${deal.airline?.toUpperCase()}`
+          );
+        });
+      }
+
+
+    }, 800);
+
+    console.log("🟢 useEffect triggered with params:", { from, to, date }); // ✅ ADD THI S
+
+    return () => clearTimeout(delay);
+  }, [from, to, date]);
+
 
   const renderFields = () => {
     switch (category) {
       case "travel":
         return (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="From (e.g. DEL)"
-              value={from}
-              onChangeText={setFrom}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="To (e.g. BOM)"
-              value={to}
-              onChangeText={setTo}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Date (YYYY-MM-DD)"
-              value={date}
-              onChangeText={setDate}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Number of Persons"
-              keyboardType="numeric"
-              value={persons}
-              onChangeText={setPersons}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Approx. Budget (₹)"
-              keyboardType="numeric"
-              value={budget}
-              onChangeText={setBudget}
-            />
+            <TextInput style={styles.input} placeholder="From (e.g. DEL)" value={from} onChangeText={setFrom} />
+            <TextInput style={styles.input} placeholder="To (e.g. BOM)" value={to} onChangeText={setTo} />
+
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <View pointerEvents="none">
+                <TextInput
+                  style={styles.input}
+                  placeholder="Select Date"
+                  value={date}
+                  editable={false}
+                />
+              </View>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date()}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={onChangeDate}
+                minimumDate={new Date()}
+              />
+            )}
+
+
+
+            <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
+            <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
+
+            {deals.length > 0 && (
+              <View style={styles.dealsBox}>
+                <Text style={styles.dealsHeading}>Live Flight Prices</Text>
+
+                {/* ✅ Current lowest price */}
+                <View style={[styles.dealRow, { marginBottom: 12 }]}>
+                  <Text style={[styles.dealText, { fontWeight: "bold", color: "#00FFAA" }]}>
+                    🟢 Current Lowest Price → ₹{Number(deals[0]?.price).toLocaleString("en-IN")}
+                  </Text>
+                </View>
+
+                {/* ✅ Top 3 (or less) flight listings */}
+                {deals.slice(0, 3).map((deal, idx) => (
+                  <View key={idx} style={styles.dealRow}>
+                    <Text style={styles.dealText}>
+                      ✈ {deal.origin} → {deal.destination} | ₹{Number(deal.price).toLocaleString("en-IN")} | {mapAirlineName(deal.airline)}
+                    </Text>
+                  </View>
+                ))}
+
+                {/* ⚠️ Optional notice if fewer than 3 flights */}
+                {deals.length < 3 && (
+                  <Text style={{ color: "yellow", marginTop: 6 }}>
+                    ⚠️ Only {deals.length} flight deal(s) available for this route/date.
+                  </Text>
+                )}
+              </View>
+            )}
+
+
           </>
         );
       case "entertainment":
@@ -125,13 +211,27 @@ export default function CategoryForm() {
         );
     }
   };
+  // ✅ Airline code → Full name mapper
+  const mapAirlineName = (code) => {
+    const airlines = {
+      "6E": "IndiGo",
+      "AI": "Air India",
+      "SG": "SpiceJet",
+      "UK": "Vistara",
+      "G8": "GoFirst",
+      "IX": "Air India Express",
+      "I5": "AirAsia India",
+    };
+    return airlines[code] || code;
+  };
+
 
   const handleSubmit = async () => {
     try {
       let spendAmount = 0;
 
       if (category === "travel") {
-        if (!from || !to || !persons || !budget) {
+        if (!from || !to || !date || !persons || !budget) {
           alert("Please fill all travel fields.");
           return;
         }
@@ -154,21 +254,11 @@ export default function CategoryForm() {
         alert("Invalid amount.");
         return;
       }
-      if (isNaN(spendAmount) || spendAmount <= 0) {
-        alert("Invalid amount.");
-        return;
-      }
 
       if (!token) {
         alert("Login session expired. Please login again.");
         return;
       }
-
-      console.log("📤 Sending to API:", {
-        category,
-        subCategory,
-        amount: spendAmount,
-      });
 
       const res = await api.get("/match/best-card", {
         headers: {
@@ -178,22 +268,39 @@ export default function CategoryForm() {
           category: category?.trim().toLowerCase(),
           subCategory: subCategory?.trim().toLowerCase(),
           amount: spendAmount,
+          from,
+          to,
+          date,
         },
       });
 
       const { bestCards, suggestions, success } = res.data;
 
-      if (success && bestCards?.length > 0) {
-        setBestCard(bestCards);
-        router.push("/screens/bestcardresult");
-      } else if (suggestions?.length > 0) {
-        router.push({
-          pathname: "/screens/bestcardresult",
-          params: {
-            suggestions: JSON.stringify(suggestions),
-          },
-        });
-      } else {
+     if (success && bestCards?.length > 0) {
+  setBestCard(bestCards);
+  router.push({
+    pathname: "/screens/bestcardresult",
+    params: {
+      flightLink,
+      flightAmount: lowestPrice,
+      from,
+      to,
+      date,
+    },
+  });
+} else if (suggestions?.length > 0) {
+  router.push({
+    pathname: "/screens/bestcardresult",
+    params: {
+      suggestions: JSON.stringify(suggestions),
+      flightLink,
+      flightAmount: lowestPrice,
+      from,
+      to,
+      date,
+    },
+  });
+} else {
         alert("No matching card found.");
       }
     } catch (err) {
@@ -206,15 +313,9 @@ export default function CategoryForm() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
       <TopBar screen={formattedCategory} />
-
-      <ScrollView
-        contentContainerStyle={styles.form}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>{subCategory}</Text>
         {renderFields()}
-
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Get Best Card</Text>
         </TouchableOpacity>
@@ -224,14 +325,8 @@ export default function CategoryForm() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0D0D2B",
-    paddingTop: 40,
-  },
-  form: {
-    padding: 20,
-  },
+  container: { flex: 1, backgroundColor: "#0D0D2B", paddingTop: 40 },
+  form: { padding: 20 },
   title: {
     color: "#fff",
     fontSize: 20,
@@ -280,5 +375,24 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  dealsBox: {
+    backgroundColor: "#1A1A3C",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  dealsHeading: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  dealRow: {
+    marginBottom: 6,
+  },
+  dealText: {
+    color: "#fff",
+    fontSize: 14,
   },
 });
