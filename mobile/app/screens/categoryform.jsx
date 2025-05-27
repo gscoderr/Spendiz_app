@@ -16,11 +16,11 @@ import api from "../../utils/axiosInstance";
 
 export default function CategoryForm() {
   const { category, subCategory } = useLocalSearchParams();
-  const formattedCategory = category?.charAt(0).toUpperCase() + category?.slice(1);
+  const formattedCategory =
+    category?.charAt(0).toUpperCase() + category?.slice(1);
   const router = useRouter();
   const { setBestCard } = useBestCard();
   const { token } = useUser();
- 
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -37,18 +37,55 @@ export default function CategoryForm() {
       case "travel":
         return (
           <>
-            <TextInput style={styles.input} placeholder="From (e.g. DEL)" value={from} onChangeText={setFrom} />
-            <TextInput style={styles.input} placeholder="To (e.g. BOM)" value={to} onChangeText={setTo} />
-            <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
-            <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
-            <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
+            <TextInput
+              style={styles.input}
+              placeholder="From (e.g. DEL)"
+              value={from}
+              onChangeText={setFrom}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="To (e.g. BOM)"
+              value={to}
+              onChangeText={setTo}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Date (YYYY-MM-DD)"
+              value={date}
+              onChangeText={setDate}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Number of Persons"
+              keyboardType="numeric"
+              value={persons}
+              onChangeText={setPersons}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Approx. Budget (₹)"
+              keyboardType="numeric"
+              value={budget}
+              onChangeText={setBudget}
+            />
           </>
         );
       case "entertainment":
         return (
           <>
-            <TextInput style={styles.input} placeholder="Movie/Event Name" value={movie} onChangeText={setMovie} />
-            <TextInput style={styles.input} placeholder="Location" value={location} onChangeText={setLocation} />
+            <TextInput
+              style={styles.input}
+              placeholder="Movie/Event Name"
+              value={movie}
+              onChangeText={setMovie}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Location"
+              value={location}
+              onChangeText={setLocation}
+            />
           </>
         );
       case "shopping":
@@ -56,15 +93,29 @@ export default function CategoryForm() {
       default:
         return (
           <>
-            <TextInput style={styles.input} placeholder="Spend Amount (₹)" keyboardType="numeric" value={amount} onChangeText={setAmount} />
+            <TextInput
+              style={styles.input}
+              placeholder="Spend Amount (₹)"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+            />
             <View style={styles.modeToggle}>
               {["Full", "EMI"].map((mode) => (
                 <TouchableOpacity
                   key={mode}
-                  style={[styles.modeButton, paymentMode === mode && styles.modeSelected]}
+                  style={[
+                    styles.modeButton,
+                    paymentMode === mode && styles.modeSelected,
+                  ]}
                   onPress={() => setPaymentMode(mode)}
                 >
-                  <Text style={[styles.modeText, paymentMode === mode && styles.modeTextSelected]}>
+                  <Text
+                    style={[
+                      styles.modeText,
+                      paymentMode === mode && styles.modeTextSelected,
+                    ]}
+                  >
                     {mode}
                   </Text>
                 </TouchableOpacity>
@@ -156,7 +207,11 @@ export default function CategoryForm() {
       <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
       <TopBar screen={formattedCategory} />
 
-      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.form}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>{subCategory}</Text>
         {renderFields()}
 
@@ -227,4 +282,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
- 

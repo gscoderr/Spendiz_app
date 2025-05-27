@@ -2,7 +2,6 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import Card from "../models/card.model.js";
 import CardOffer from "../models/mastercards.model.js";
-import Fuse from "fuse.js";
 import { normalizeInput } from "../utils/normalizeInput.js";
 
 export const matchBestCard = asyncHandler(async (req, res) => {
@@ -34,18 +33,8 @@ export const matchBestCard = asyncHandler(async (req, res) => {
     const master = await CardOffer.findOne({
       $expr: {
         $and: [
-          {
-            $eq: [
-              { $toLower: "$bank" },
-              normalizedBank,
-            ],
-          },
-          {
-            $eq: [
-              { $toLower: "$cardName" },
-              normalizedCardName,
-            ],
-          },
+          { $eq: [{ $toLower: "$bank" }, normalizedBank] },
+          { $eq: [{ $toLower: "$cardName" }, normalizedCardName] },
         ],
       },
     });
@@ -95,12 +84,12 @@ export const matchBestCard = asyncHandler(async (req, res) => {
         cashbackBenefitValue: rewardType === "cashback" ? benefitValue : 0,
         rewardBenefitValue: rewardType === "reward points" ? benefitValue : 0,
         totalBenefitValue: benefitValue,
-        benefitDetails: offer.benefitDetails,
-        coPartnerBrands: offer.coPartnerBrands,
-        tnc: offer.tnc,
-        maxLimitRewardPoints: offer.maxLimitRewardPoints,
-        maxLimitCashback: offer.maxLimitCashback,
-        remarks: master.remarks,
+        benefitDetails: offer.benefit || offer.benefitDetails || "",
+        coPartnerBrands: offer.coPartnerBrands || [],
+        tnc: offer.tnc || "",
+        maxLimitRewardPoints: offer.maxLimitRewardPoints || 0,
+        maxLimitCashback: offer.maxLimitCashback || 0,
+        remarks: master.remarks || "",
         last4Digits: userCard.last4Digits,
         cardHolderName: userCard.cardHolderName,
       });
@@ -112,38 +101,67 @@ export const matchBestCard = asyncHandler(async (req, res) => {
       .sort((a, b) => b.totalBenefitValue - a.totalBenefitValue)
       .slice(0, 5);
 
+    // Also prepare additional suggestions
+    const allMasters = await CardOffer.find({});
+    const suggestionPool = [];
+
+    for (const master of allMasters) {
+      const categoryOffers = master[normalizedCategory] || [];
+      for (const offer of categoryOffers) {
+        const subCats = (offer.subCategory || "")
+          .toLowerCase()
+          .split(",")
+          .map((s) => normalizeInput(s.trim()));
+
+        if (subCats.includes(normalizedSubCategory)) {
+          suggestionPool.push({
+            bank: master.bank,
+            cardName: master.cardName,
+            subCategory: offer.subCategory,
+            coPartnerBrands: offer.coPartnerBrands || [],
+            benefitDetails: offer.benefit || offer.benefitDetails || "",
+            tnc: offer.tnc || "",
+            remarks: master.remarks || "",
+          });
+        }
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Top matching cards",
       bestCards: sortedMatches,
+      suggestions: suggestionPool, // ✅ add this even with success
     });
   }
 
-  // 🔍 Fuzzy fallback
+  // ✅ Other unmatched offers from all cards (same category + subcategory)
   const allMasters = await CardOffer.find({});
-  const flatSubCategories = allMasters.flatMap((master) => {
+  const suggestionPool = [];
+
+  for (const master of allMasters) {
     const categoryOffers = master[normalizedCategory] || [];
-    return categoryOffers.flatMap((offer) =>
-      (offer.subCategory || "").split(",").map((sub) => ({
-        subCategory: sub.trim(),
-        bank: master.bank,
-        cardName: master.cardName,
-        spendCategory: normalizedCategory,
-        benefitDetails: offer.benefitDetails,
-        coPartnerBrands: offer.coPartnerBrands,
-      }))
-    );
-  });
+    for (const offer of categoryOffers) {
+      const subCats = (offer.subCategory || "")
+        .toLowerCase()
+        .split(",")
+        .map((s) => normalizeInput(s.trim()));
 
-  const fuse = new Fuse(flatSubCategories, {
-    keys: ["subCategory"],
-    threshold: 0.4,
-  });
+      if (subCats.includes(normalizedSubCategory)) {
+        suggestionPool.push({
+          bank: master.bank,
+          cardName: master.cardName,
+          subCategory: offer.subCategory,
+          coPartnerBrands: offer.coPartnerBrands || [],
+          benefitDetails: offer.benefit || offer.benefitDetails || "",
+          tnc: offer.tnc || "",
+          remarks: master.remarks || "",
+        });
+      }
+    }
+  }
 
-  const suggestions = fuse.search(normalizedSubCategory).map((r) => r.item);
-
-  console.log("suggestions: ",suggestions)
-  if (!suggestions.length) {
+  if (!suggestionPool.length) {
     throw new ApiError(
       404,
       "No matching offers found, and no close suggestions available"
@@ -152,7 +170,7 @@ export const matchBestCard = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: false,
-    message: "No exact match found, but similar suggestions are available",
-    suggestions,
+    message: "No exact match found, but here are some offers",
+    suggestions: suggestionPool,
   });
 });

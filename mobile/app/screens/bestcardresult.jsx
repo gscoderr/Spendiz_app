@@ -45,8 +45,9 @@ export default function CardBenefitsScreen() {
 
   const getUserCardInfo = (bank, cardName) =>
     userSavedCards.find(
-      (c) => c.bank.toLowerCase() === bank.toLowerCase() &&
-            c.cardName.toLowerCase() === cardName.toLowerCase()
+      (c) =>
+        c.bank.toLowerCase() === bank.toLowerCase() &&
+        c.cardName.toLowerCase() === cardName.toLowerCase()
     );
 
   return (
@@ -95,25 +96,7 @@ export default function CardBenefitsScreen() {
                           : card.coPartnerBrands || "Partner Offer"}
                       </Text>
                       <Text style={styles.offerDescription}>
-                        {card.benefitDetails || "Benefit details not available"}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity>
-                    <Text style={styles.redeemBtn}>Redeem</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.offerCard}>
-                  <View style={styles.offerLeft}>
-                    <View style={styles.circleLogo} />
-                    <View>
-                      <Text style={styles.offerTitle}>
-                        {Array.isArray(card.coPartnerBrands)
-                          ? card.coPartnerBrands.join(", ")
-                          : card.coPartnerBrands || "Partner Offer"}
-                      </Text>
-                      <Text style={styles.offerDescription}>
-                        {card.benefitDetails || "Benefit details not available"}
+                        {offer.benefitDetails || "Benefit details not available"}
                       </Text>
                     </View>
                   </View>
@@ -132,28 +115,34 @@ export default function CardBenefitsScreen() {
 
         {suggestions.length > 0 && (
           <View>
-            <Text style={styles.sectionTitle}>💡 Other Offers You May Like</Text>
-            {suggestions.map((offer, index) => (
-              <View key={index} style={styles.offerCard}>
-                <View style={styles.offerLeft}>
-                  <View style={styles.circleLogo} />
-                  <View>
-                    <Text style={styles.offerTitle}>
-                      {Array.isArray(offer.coPartnerBrands)
-                        ? offer.coPartnerBrands.join(", ")
-                        : offer.coPartnerBrands || "Partner Offer"}
-                    </Text>
-                    <Text style={styles.offerDescription}>
-                      {offer.benefitDetails ||
-                        `Get extra benefits on ${offer.subCategory || "spends"}`}
-                    </Text>
+            <Text style={styles.sectionTitle}>
+              💡 Other Offers You May Like
+            </Text>
+
+            {suggestions.map((offer, index) => {
+              const brand = Array.isArray(offer.coPartnerBrands)
+                ? offer.coPartnerBrands.join(", ")
+                : offer.coPartnerBrands || "Partner Offer";
+
+              const benefitText =
+                offer.benefitDetails ||
+                `Get extra benefits on ${offer.subCategory || "spends"}`;
+
+              return (
+                <View key={index} style={styles.offerCard}>
+                  <View style={styles.offerLeft}>
+                    <View style={styles.circleLogo} />
+                    <View>
+                      <Text style={styles.offerTitle}>{brand}</Text>
+                      <Text style={styles.offerDescription}>{benefitText}</Text>
+                    </View>
                   </View>
+                  <TouchableOpacity>
+                    <Text style={styles.redeemBtn}>View</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity>
-                  <Text style={styles.redeemBtn}>View</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
