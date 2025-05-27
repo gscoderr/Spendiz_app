@@ -21,9 +21,15 @@ import api from "../../utils/axiosInstance.js";
 import TopBar from "../component/topbar.jsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/user.context";
+import { fetchMatchingOffers } from "../../utils/offers.api.js";
+
 
 export default function CreditCards() {
   const router = useRouter();
+  const { userSavedCards } = useUser();
+  const [cardOffers, setCardOffers] = useState({});
+
   const [cards, setCards] = useState([]);
   const [filteredCards, setFilteredCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +45,8 @@ export default function CreditCards() {
       try {
         const res = await api.get("/cards/user");
         setCards(res.data.data);
+        console.log("💳 Saved Cards from DB:", res.data.data);
+
       } catch (err) {
         console.error("❌ Error fetching cards:", err.message);
       } finally {
@@ -47,6 +55,43 @@ export default function CreditCards() {
     };
     fetchCards();
   }, []);
+
+  useEffect(() => {
+    const fetchAllOffers = async () => {
+      try {
+        const res = await fetchMatchingOffers({
+          cards,
+          category: "",
+          subCategory: "",
+        });
+
+        console.log("📦 Offers fetched from backend:", res);
+
+        const offerMap = {};
+        res.forEach((offer) => {
+          offer.cardNames?.forEach((name) => {
+            const match = cards.find(
+              (card) =>
+                card.cardName?.toLowerCase() === name.toLowerCase() &&
+                card.bank?.toLowerCase() === offer.bank?.toLowerCase()
+            );
+            if (match) {
+              if (!offerMap[match._id]) offerMap[match._id] = [];
+              offerMap[match._id].push(offer);
+            }
+          });
+        });
+
+        setCardOffers(offerMap);
+      } catch (err) {
+        console.warn("❌ Error fetching offers:", err.message);
+      }
+    };
+
+    if (cards.length > 0) {
+      fetchAllOffers();
+    }
+  }, [cards]);
 
   useEffect(() => {
     const filtered = cards.filter(
@@ -279,9 +324,41 @@ export default function CreditCards() {
                         </View>
                       )}
                     </View>
+                    {cardOffers[card._id]?.length > 0 && (
+                      <View
+                        style={{
+                          marginTop: 10,
+                          padding: 10,
+                          backgroundColor: "#ffffff20",
+                          borderRadius: 10,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "bold", marginBottom: 6 }}>
+                          🔥 Offers & Benefits
+                        </Text>
+                        {cardOffers[card._id].map((offer, idx) => (
+                          <View key={idx} style={{ marginBottom: 6 }}>
+                            <Text style={{ color: "#fff" }}>🎯 {offer.benefit}</Text>
+                            {offer.partnerBrands?.length > 0 && (
+                              <Text style={{ color: "#ccc", fontSize: 12 }}>
+                                Brands: {offer.partnerBrands.join(", ")}
+                              </Text>
+                            )}
+                            <Text style={{ color: "#ccc", fontSize: 12 }}>
+                              Valid till: {new Date(offer.validTill).toDateString()}
+                            </Text>
+                            {offer.tnc && (
+                              <Text style={{ color: "#aaa", fontSize: 11 }}>📝 {offer.tnc}</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
                   </TouchableOpacity>
                 );
               })
+
             )}
 
             <View style={styles.featuresRow}>

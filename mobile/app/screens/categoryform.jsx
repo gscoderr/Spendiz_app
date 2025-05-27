@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -13,9 +12,10 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TopBar from "../component/topbar";
-import { useBestCard } from "../../context/bestcard.context";
-import { useUser } from "../../context/user.context";
-import api from "../../utils/axiosInstance";
+import { useBestCard } from "../../context/bestcard.context.js";
+import { useUser } from "../../context/user.context.js";
+import api from "../../utils/axiosInstance.js";
+import { fetchMatchingOffers } from "../../utils/offers.api.js";
 
 export default function CategoryForm() {
   const { category, subCategory } = useLocalSearchParams();
@@ -23,13 +23,12 @@ export default function CategoryForm() {
     category?.charAt(0).toUpperCase() + category?.slice(1);
   const router = useRouter();
   const { setBestCard } = useBestCard();
-  const { token } = useUser();
+  const { token, userSavedCards } = useUser();
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState("");
   const [lowestPrice, setLowestPrice] = useState("");
-
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [persons, setPersons] = useState("");
   const [budget, setBudget] = useState("");
@@ -39,6 +38,7 @@ export default function CategoryForm() {
   const [location, setLocation] = useState("");
   const [deals, setDeals] = useState([]);
   const [flightLink, setFlightLink] = useState("");
+  const [matchedOffers, setMatchedOffers] = useState([]);
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -59,46 +59,68 @@ export default function CategoryForm() {
       return [];
     }
   };
+
   useEffect(() => {
-    const valid = from.length === 3 && to.length === 3 && /^\d{4}-\d{2}-\d{2}$/.test(date);
+    const valid =
+      from.length === 3 && to.length === 3 && /^\d{4}-\d{2}-\d{2}$/.test(date);
     if (!valid) return;
 
     const delay = setTimeout(async () => {
-      const flights = await fetchFlightDeals(from.toUpperCase(), to.toUpperCase(), date);
-      console.log("🟢 Flights Fetched in useEffect:", flights); // ✅ ADD THIS
+      const flights = await fetchFlightDeals(
+        from.toUpperCase(),
+        to.toUpperCase(),
+        date
+      );
       setDeals(flights);
 
       if (flights.length > 0) {
         setLowestPrice(flights[0]?.price?.toString());
         setBudget(flights[0]?.price?.toString());
         setFlightLink("https://www.aviasales.com" + flights[0]?.link);
-
-
-        console.log("✅ Top 3 Flight Deals:");
-        flights.slice(0, 3).forEach((deal, idx) => {
-          console.log(
-            `#${idx + 1} ✈ ${deal.origin} → ${deal.destination} | ₹${deal.price} | ${deal.airline?.toUpperCase()}`
-          );
-        });
       }
-
-
     }, 800);
-
-    console.log("🟢 useEffect triggered with params:", { from, to, date }); // ✅ ADD THI S
 
     return () => clearTimeout(delay);
   }, [from, to, date]);
 
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const res = await fetchMatchingOffers({
+          cards: userSavedCards,
+          category: category?.trim().toLowerCase(),
+          subCategory: subCategory?.trim().toLowerCase(),
+        });
+
+        setMatchedOffers(res || []);
+        console.log("🎯 Matched Dynamic Offers:", res);
+      } catch (err) {
+        console.warn("❌ Offer fetch failed:", err.message);
+      }
+    };
+
+    if (userSavedCards?.length > 0 && category && subCategory) {
+      fetchOffers();
+    }
+  }, [category, subCategory]);
 
   const renderFields = () => {
     switch (category) {
       case "travel":
         return (
           <>
-            <TextInput style={styles.input} placeholder="From (e.g. DEL)" value={from} onChangeText={setFrom} />
-            <TextInput style={styles.input} placeholder="To (e.g. BOM)" value={to} onChangeText={setTo} />
-
+            <TextInput
+              style={styles.input}
+              placeholder="From (e.g. DEL)"
+              value={from}
+              onChangeText={setFrom}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="To (e.g. BOM)"
+              value={to}
+              onChangeText={setTo}
+            />
             <TouchableOpacity onPress={() => setShowDatePicker(true)}>
               <View pointerEvents="none">
                 <TextInput
@@ -120,41 +142,51 @@ export default function CategoryForm() {
               />
             )}
 
-
-
-            <TextInput style={styles.input} placeholder="Number of Persons" keyboardType="numeric" value={persons} onChangeText={setPersons} />
-            <TextInput style={styles.input} placeholder="Approx. Budget (₹)" keyboardType="numeric" value={budget} onChangeText={setBudget} />
+            <TextInput
+              style={styles.input}
+              placeholder="Number of Persons"
+              keyboardType="numeric"
+              value={persons}
+              onChangeText={setPersons}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Approx. Budget (₹)"
+              keyboardType="numeric"
+              value={budget}
+              onChangeText={setBudget}
+            />
 
             {deals.length > 0 && (
               <View style={styles.dealsBox}>
                 <Text style={styles.dealsHeading}>Live Flight Prices</Text>
-
-                {/* ✅ Current lowest price */}
                 <View style={[styles.dealRow, { marginBottom: 12 }]}>
-                  <Text style={[styles.dealText, { fontWeight: "bold", color: "#00FFAA" }]}>
-                    🟢 Current Lowest Price → ₹{Number(deals[0]?.price).toLocaleString("en-IN")}
+                  <Text
+                    style={[
+                      styles.dealText,
+                      { fontWeight: "bold", color: "#00FFAA" },
+                    ]}
+                  >
+                    🟢 Current Lowest Price → ₹
+                    {Number(deals[0]?.price).toLocaleString("en-IN")}
                   </Text>
                 </View>
-
-                {/* ✅ Top 3 (or less) flight listings */}
                 {deals.slice(0, 3).map((deal, idx) => (
                   <View key={idx} style={styles.dealRow}>
                     <Text style={styles.dealText}>
-                      ✈ {deal.origin} → {deal.destination} | ₹{Number(deal.price).toLocaleString("en-IN")} | {mapAirlineName(deal.airline)}
+                      ✈ {deal.origin} → {deal.destination} | ₹
+                      {Number(deal.price).toLocaleString("en-IN")} |{" "}
+                      {mapAirlineName(deal.airline)}
                     </Text>
                   </View>
                 ))}
-
-                {/* ⚠️ Optional notice if fewer than 3 flights */}
                 {deals.length < 3 && (
                   <Text style={{ color: "yellow", marginTop: 6 }}>
-                    ⚠️ Only {deals.length} flight deal(s) available for this route/date.
+                    ⚠️ Only {deals.length} flight deal(s) available.
                   </Text>
                 )}
               </View>
             )}
-
-
           </>
         );
       case "entertainment":
@@ -211,20 +243,19 @@ export default function CategoryForm() {
         );
     }
   };
-  // ✅ Airline code → Full name mapper
+
   const mapAirlineName = (code) => {
     const airlines = {
       "6E": "IndiGo",
-      "AI": "Air India",
-      "SG": "SpiceJet",
-      "UK": "Vistara",
-      "G8": "GoFirst",
-      "IX": "Air India Express",
-      "I5": "AirAsia India",
+      AI: "Air India",
+      SG: "SpiceJet",
+      UK: "Vistara",
+      G8: "GoFirst",
+      IX: "Air India Express",
+      I5: "AirAsia India",
     };
     return airlines[code] || code;
   };
-
 
   const handleSubmit = async () => {
     try {
@@ -276,31 +307,31 @@ export default function CategoryForm() {
 
       const { bestCards, suggestions, success } = res.data;
 
-     if (success && bestCards?.length > 0) {
-  setBestCard(bestCards);
-  router.push({
-    pathname: "/screens/bestcardresult",
-    params: {
-      flightLink,
-      flightAmount: lowestPrice,
-      from,
-      to,
-      date,
-    },
-  });
-} else if (suggestions?.length > 0) {
-  router.push({
-    pathname: "/screens/bestcardresult",
-    params: {
-      suggestions: JSON.stringify(suggestions),
-      flightLink,
-      flightAmount: lowestPrice,
-      from,
-      to,
-      date,
-    },
-  });
-} else {
+      if (success && bestCards?.length > 0) {
+        setBestCard(bestCards);
+        router.push({
+          pathname: "/screens/bestcardresult",
+          params: {
+            flightLink,
+            flightAmount: lowestPrice,
+            from,
+            to,
+            date,
+          },
+        });
+      } else if (suggestions?.length > 0) {
+        router.push({
+          pathname: "/screens/bestcardresult",
+          params: {
+            suggestions: JSON.stringify(suggestions),
+            flightLink,
+            flightAmount: lowestPrice,
+            from,
+            to,
+            date,
+          },
+        });
+      } else {
         alert("No matching card found.");
       }
     } catch (err) {
@@ -313,9 +344,42 @@ export default function CategoryForm() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D2B" />
       <TopBar screen={formattedCategory} />
-      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.form}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>{subCategory}</Text>
         {renderFields()}
+
+        {/* ✅ Matched Offers Display */}
+        {matchedOffers.length > 0 && (
+          <View style={styles.dealsBox}>
+            <Text style={styles.dealsHeading}>🔥 Bank Offers</Text>
+            {matchedOffers.map((offer, idx) => (
+              <View key={idx} style={styles.dealRow}>
+                <Text style={styles.dealText}>
+                  🏦 {offer.bank} → {offer.benefit}
+                </Text>
+                {offer.partnerBrands?.length > 0 && (
+                  <Text style={styles.dealText}>
+                    🎯 Brands: {offer.partnerBrands.join(", ")}
+                  </Text>
+                )}
+                <Text style={styles.dealText}>
+                  📅 Valid Till:{" "}
+                  {new Date(offer.validTill).toDateString()}
+                </Text>
+                {offer.tnc && (
+                  <Text style={[styles.dealText, { fontSize: 12, color: "#ccc" }]}>
+                    📝 {offer.tnc}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Get Best Card</Text>
         </TouchableOpacity>
