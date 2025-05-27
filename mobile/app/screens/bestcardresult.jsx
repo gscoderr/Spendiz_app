@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Linking,
 } from "react-native";
 
 import { useBestCard } from "../../context/bestcard.context.js";
@@ -13,11 +14,13 @@ import { useLocalSearchParams } from "expo-router";
 import SavedCard from "../component/savedcard.jsx";
 import { useUser } from "../../context/user.context.js";
 
+
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
   const { userSavedCards } = useUser();
   const params = useLocalSearchParams();
   const [suggestions, setSuggestions] = useState([]);
+  const { flightLink, flightAmount, from, to, date } = useLocalSearchParams();
 
   useEffect(() => {
     if (params?.suggestions) {
@@ -34,6 +37,11 @@ export default function CardBenefitsScreen() {
   // 🐞 Debug
   console.log("🟢 bestCards:", bestCards?.length);
   console.log("🟡 suggestions:", suggestions?.length);
+  console.log("flight amount",flightAmount)
+  console.log("flight link",flightLink)
+  console.log("flight from",from)
+  console.log("flight to",to)
+  console.log("flight date",date)
 
   if ((!bestCards || bestCards.length === 0) && suggestions.length === 0) {
     return (
@@ -46,7 +54,7 @@ export default function CardBenefitsScreen() {
   const getUserCardInfo = (bank, cardName) =>
     userSavedCards.find(
       (c) => c.bank.toLowerCase() === bank.toLowerCase() &&
-            c.cardName.toLowerCase() === cardName.toLowerCase()
+        c.cardName.toLowerCase() === cardName.toLowerCase()
     );
 
   return (
@@ -128,6 +136,20 @@ export default function CardBenefitsScreen() {
           <Text style={[styles.errorText, { marginBottom: 16 }]}>
             No matching cards found for this spend. Try checking offers below.
           </Text>
+        )}
+
+        {flightLink && (
+          <View style={[styles.offerCard, { backgroundColor: '#e8f8f5' }]}>
+            <View style={styles.offerLeft}>
+              <View>
+                <Text style={[styles.offerTitle, { fontSize: 16, color: '#1a5276' }]}>Flight Booking Available</Text>
+                <Text style={[styles.offerDescription, { color: '#1a5276' }]}>From {from} to {to} on {date} at ₹{Number(flightAmount).toLocaleString("en-IN")}</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => Linking.openURL(flightLink)}>
+              <Text style={[styles.redeemBtn, { color: '#0e6655' }]}>Book Now →</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {suggestions.length > 0 && (

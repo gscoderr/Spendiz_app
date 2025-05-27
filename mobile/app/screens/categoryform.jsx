@@ -37,6 +37,7 @@ export default function CategoryForm() {
   const [movie, setMovie] = useState("");
   const [location, setLocation] = useState("");
   const [deals, setDeals] = useState([]);
+  const [flightLink, setFlightLink] = useState("");
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -67,8 +68,10 @@ export default function CategoryForm() {
       setDeals(flights);
 
       if (flights.length > 0) {
-        setLowestPrice(flights[0]?.value?.toString());
-        setBudget(flights[0]?.value?.toString());
+        setLowestPrice(flights[0]?.price?.toString());
+        setBudget(flights[0]?.price?.toString());
+        setFlightLink("https://www.aviasales.com" + flights[0]?.link);
+
 
         console.log("✅ Top 3 Flight Deals:");
         flights.slice(0, 3).forEach((deal, idx) => {
@@ -248,17 +251,31 @@ export default function CategoryForm() {
 
       const { bestCards, suggestions, success } = res.data;
 
-      if (success && bestCards?.length > 0) {
-        setBestCard(bestCards);
-        router.push("/screens/bestcardresult");
-      } else if (suggestions?.length > 0) {
-        router.push({
-          pathname: "/screens/bestcardresult",
-          params: {
-            suggestions: JSON.stringify(suggestions),
-          },
-        });
-      } else {
+     if (success && bestCards?.length > 0) {
+  setBestCard(bestCards);
+  router.push({
+    pathname: "/screens/bestcardresult",
+    params: {
+      flightLink,
+      flightAmount: lowestPrice,
+      from,
+      to,
+      date,
+    },
+  });
+} else if (suggestions?.length > 0) {
+  router.push({
+    pathname: "/screens/bestcardresult",
+    params: {
+      suggestions: JSON.stringify(suggestions),
+      flightLink,
+      flightAmount: lowestPrice,
+      from,
+      to,
+      date,
+    },
+  });
+} else {
         alert("No matching card found.");
       }
     } catch (err) {
