@@ -19,6 +19,15 @@ if (!SMARTBUY_URL) {
   process.exit(1);
 }
 
+
+// 📌 Extract Rs. XXXX value for minTransaction
+function extractMinTransaction(text) {
+  const match = text?.match(/Rs\.?\s?(\d+[,\d]*)/i);
+  return match ? parseInt(match[1].replace(/,/g, ""), 10) : undefined;
+}
+
+
+
 const scrapeSmartBuyOffers = async () => {
   try {
     console.log("🧹 STEP 0: Deleting old SmartBuy offers...");
@@ -45,7 +54,9 @@ const scrapeSmartBuyOffers = async () => {
 
     console.log("✅ STEP 4: Checking for .content_div_low...");
     try {
-      await page.waitForSelector(".content_div_low", { timeout: 15000 });
+      // await page.waitForSelector(".content_div_low", { timeout: 15000 });
+     
+    await page.waitForSelector(".fjs_item", { timeout: 20000 });
       console.log("✅ Found content blocks.");
     } catch {
       console.warn("❌ Selector not found. Screenshot saved.");
@@ -55,18 +66,41 @@ const scrapeSmartBuyOffers = async () => {
     }
 
     console.log("🧲 STEP 5: Scraping offer data...");
+    // const offers = await page.evaluate(() => {
+    //   const data = [];
+    //   document.querySelectorAll(".content_div_low").forEach(el => {
+    //     const pTags = el.querySelectorAll("p.card_p_text");
+    //     const line1 = pTags[0]?.innerText?.trim() || "";
+    //     const line2 = pTags[1]?.innerText?.trim() || "";
+    //     const title = `${line1} ${line2}`.trim();
+    //     if (title.length > 10) {
+    //       data.push({ title, source: "SmartBuy" });
+    //     }
+    //   });
+    //   return data;
+    // });
+
+      console.log("🧲 STEP 5: Scraping full offer cards...");
     const offers = await page.evaluate(() => {
-      const data = [];
-      document.querySelectorAll(".content_div_low").forEach(el => {
-        const pTags = el.querySelectorAll("p.card_p_text");
-        const line1 = pTags[0]?.innerText?.trim() || "";
-        const line2 = pTags[1]?.innerText?.trim() || "";
-        const title = `${line1} ${line2}`.trim();
-        if (title.length > 10) {
-          data.push({ title, source: "SmartBuy" });
-        }
+      const items = document.querySelectorAll(".fjs_item");
+      return Array.from(items).map(item => {
+        const anchor = item.querySelector("a");
+        const image = item.querySelector("img")?.src || "";
+        const title = item.querySelector(".offerCard-title")?.innerText?.trim() || "";
+        const description = item.querySelector(".offerCard-desc")?.innerText?.trim() || "";
+        const tag = item.querySelector(".offerTag")?.innerText?.trim() || "";
+        const category = item.querySelector(".offerCard-expiry")?.innerText?.trim() || "";
+        const link = anchor?.href || "";
+
+        return {
+          title,
+          description,
+          image,
+          tag,
+          category,
+          link,
+        };
       });
-      return data;
     });
 
     await browser.close();
@@ -78,20 +112,47 @@ const scrapeSmartBuyOffers = async () => {
     }
 
     console.log("💾 STEP 7: Saving to MongoDB...");
-    let saved = 0;
-    for (const offer of offers) {
+    // let saved = 0;
+    // for (const offer of offers) {
+    //   await Offer.create({
+    //     ...offer,
+    //     bank: "HDFC Bank",
+    //     category: "Shopping",
+    //     subCategory: "SmartBuy",
+    //     validTill: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    //     scrapedAt: new Date(),
+    //   });
+    //   saved++;
+    // }
+
+    // console.log(`✅ STEP 8: Saved ${saved}/${offers.length} offers.`);
+
+       let saved = 0;
+
+    for (const o of offers) {
       await Offer.create({
-        ...offer,
+        title: o.title,
+        source: "SmartBuy",
         bank: "HDFC Bank",
+        cardNames: [],
         category: "Shopping",
-        subCategory: "SmartBuy",
+        subCategory: o.category || "SmartBuy",
+        partnerBrands: [o.title],
+        offerType: o.tag || "Discount",
+        benefit: o.description,
+        minTransaction: extractMinTransaction(o.description),
+        paymentMode: "Full",
+        validFrom: new Date(),
         validTill: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        tnc: o.link,
+        image: o.image,
         scrapedAt: new Date(),
       });
       saved++;
     }
 
     console.log(`✅ STEP 8: Saved ${saved}/${offers.length} offers.`);
+
   } catch (err) {
     console.error("❌ Scraper Error:", err.message);
   }

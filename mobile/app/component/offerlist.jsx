@@ -17,6 +17,7 @@ export default function OfferList() {
             } finally {
                 setLoading(false);
             }
+            //require("../../assets/banks/sbi.png")
         };
         fetchOffers();
     }, []);
@@ -31,11 +32,12 @@ export default function OfferList() {
                 {offers.map((item) => (
                     <View key={item._id} style={styles.offerCard}>
                         <Image
-                            source={require("../../assets/banks/sbi.png")} // dummy image
+                            source={{ uri: item.image || require("../../assets/banks/sbi.png") }}
                             style={styles.offerImage}
                             resizeMode="contain"
                         />
                         <Text style={styles.offerTitle}>{item.title}</Text>
+                        <Text style={styles.offerBenefit}>{item.benefit}</Text>
 
                         <Text style={styles.offerBank}>{item.bank}</Text>
                         <Text style={styles.offerExpiry}>
@@ -45,8 +47,21 @@ export default function OfferList() {
                                 year: "numeric",
                             })}
                         </Text>
+
+                        {item.tnc && (
+                            <Text
+                                style={styles.offerLink}
+                                onPress={() => {
+                                    // ✅ open TnC link in browser
+                                    Linking.openURL(item.tnc);
+                                }}
+                            >
+                                View Details →
+                            </Text>
+                        )}
                     </View>
                 ))}
+
             </View>
         </View>
     );
@@ -56,6 +71,20 @@ const styles = StyleSheet.create({
     container: {
         marginTop: 20,
     },
+    offerBenefit: {
+        fontSize: 12,
+        color: "#444",
+        marginVertical: 6,
+    },
+
+    offerLink: {
+        marginTop: 6,
+        color: "#3D5CFF",
+        fontSize: 12,
+        fontWeight: "500",
+        textDecorationLine: "underline",
+    },
+
     sectionTitle: {
         fontWeight: "700",
         fontSize: 16,
