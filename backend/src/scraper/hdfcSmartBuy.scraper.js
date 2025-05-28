@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 puppeteer.use(StealthPlugin());
 dotenv.config({ path: "../../.env" });
 
-const SMARTBUY_URL = "https://offers.smartbuy.hdfcbank.com/";
+const SMARTBUY_URL = "https://offers.reward360.in/v1/partners";
 const __filename = fileURLToPath(import.meta.url);
 
 const scrapeSmartBuyOffers = async () => {
