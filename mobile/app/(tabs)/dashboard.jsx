@@ -13,6 +13,8 @@ import { useUser } from "../../context/user.context.js";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TopBar from "../component/topbar.jsx";
 import { LinearGradient } from "expo-linear-gradient";
+import OfferList from "../component/offerlist.jsx";
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -118,14 +120,7 @@ export default function Dashboard() {
               { label: "Entertainment", icon: "🎬", category: "entertainment" },
               { label: "Fuel", icon: "⛽", category: "fuel" },
               { label: "Grocery", icon: "🛒", category: "grocery" },
-              // { label: "EMI", icon: "💸", category: "emi" },
-              // { label: "Fuel", icon: "⛽", category: "fuel" },
-              // { label: "Government", icon: "🏛️", category: "government" },
-              // { label: "Jewellery", icon: "💎", category: "jewellery" },
-              // { label: "Rent", icon: "🏠", category: "rent" },
-              // { label: "Utilities", icon: "🔌", category: "utilities" },
-              // { label: "Wallets", icon: "👛", category: "wallets" },
-            ].map(({ label, icon, category }) => (
+             ].map(({ label, icon, category }) => (
               <TouchableOpacity
                 key={category}
                 style={styles.categoryIconBox}
@@ -143,7 +138,11 @@ export default function Dashboard() {
               </TouchableOpacity>
             ))}
           </View>
+            <OfferList />
         </View>
+
+
+
       </ScrollView>
 
       <TouchableOpacity style={styles.askSavvy}>
@@ -265,20 +264,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 6,
   },
-
-  // payNowBtn: {
-  //   backgroundColor: "#fff",
-  //   paddingVertical: 8,
-  //   paddingHorizontal: 16,
-  //   borderRadius: 20,
-  //   alignSelf: "flex-start",
-  //   marginTop: 10,
-  // },
-
-  // payNowText: {
-  //   color: "#000",
-  //   fontWeight: "600",
-  // },
 
   addCard: {
     backgroundColor: "#1E1E3F",
