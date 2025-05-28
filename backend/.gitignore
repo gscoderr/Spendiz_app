@@ -76,6 +76,8 @@ jspm_packages/
 # vuepress build output
 .vuepress/dist
 
+src/scraper/smartbuy_page.html
+
 # Serverless directories
 .serverless/
 

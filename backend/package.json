@@ -15,6 +15,7 @@
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
+    "cheerio": "^1.0.0",
     "cloudinary": "^2.6.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -25,8 +26,12 @@
     "libphonenumber-js": "^1.12.8",
     "mongoose": "^8.14.2",
     "multer": "^1.4.5-lts.2",
+    "node-cron": "^4.0.7",
     "otp-generator": "^4.0.1",
     "prettier": "^3.5.3",
+    "puppeteer": "^24.9.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "twilio": "^5.6.0"
   },
   "devDependencies": {
