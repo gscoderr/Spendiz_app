@@ -2,6 +2,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import "./corn.service.js"; // ⬅️ Add this line to auto-start cron when app runs
+
 
 const app = express();
 
