@@ -5,15 +5,17 @@ import mongoose from "mongoose";
 
 const offerSchema = new mongoose.Schema(
   {
+    title: { type: String },                     // ✅ Add this (required for SmartBuy)
+    source: { type: String },                    // ✅ Add optional source
     bank: { type: String, required: true },
-    cardNames: [{ type: String }], // optional
+    cardNames: [{ type: String }],
     category: { type: String },
     subCategory: { type: String },
     partnerBrands: [{ type: String }],
-    offerType: { type: String }, // Cashback / Discount / Extra Rewards
-    benefit: { type: String, required: true },
+    offerType: { type: String },
+    benefit: { type: String },                   // ✅ Keep optional (was required)
     minTransaction: { type: Number },
-    paymentMode: { type: String }, // Full / EMI
+    paymentMode: { type: String },
     validFrom: { type: Date },
     validTill: { type: Date },
     tnc: { type: String }
