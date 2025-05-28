@@ -14,7 +14,6 @@ import { useLocalSearchParams } from "expo-router";
 import SavedCard from "../component/savedcard.jsx";
 import { useUser } from "../../context/user.context.js";
 
-
 export default function CardBenefitsScreen() {
   const { bestCards } = useBestCard();
   const { userSavedCards } = useUser();
@@ -37,11 +36,11 @@ export default function CardBenefitsScreen() {
   // 🐞 Debug
   console.log("🟢 bestCards:", bestCards?.length);
   console.log("🟡 suggestions:", suggestions?.length);
-  console.log("flight amount",flightAmount)
-  console.log("flight link",flightLink)
-  console.log("flight from",from)
-  console.log("flight to",to)
-  console.log("flight date",date)
+  console.log("flight amount", flightAmount);
+  console.log("flight link", flightLink);
+  console.log("flight from", from);
+  console.log("flight to", to);
+  console.log("flight date", date);
 
   if ((!bestCards || bestCards.length === 0) && suggestions.length === 0) {
     return (
@@ -104,7 +103,7 @@ export default function CardBenefitsScreen() {
                           : card.coPartnerBrands || "Partner Offer"}
                       </Text>
                       <Text style={styles.offerDescription}>
-                        {offer.benefitDetails || "Benefit details not available"}
+                        {card.benefitDetails || "Benefit details not available"}
                       </Text>
                     </View>
                   </View>
@@ -122,15 +121,27 @@ export default function CardBenefitsScreen() {
         )}
 
         {flightLink && (
-          <View style={[styles.offerCard, { backgroundColor: '#e8f8f5' }]}>
+          <View style={[styles.offerCard, { backgroundColor: "#e8f8f5" }]}>
             <View style={styles.offerLeft}>
               <View>
-                <Text style={[styles.offerTitle, { fontSize: 16, color: '#1a5276' }]}>Flight Booking Available</Text>
-                <Text style={[styles.offerDescription, { color: '#1a5276' }]}>From {from} to {to} on {date} at ₹{Number(flightAmount).toLocaleString("en-IN")}</Text>
+                <Text
+                  style={[
+                    styles.offerTitle,
+                    { fontSize: 16, color: "#1a5276" },
+                  ]}
+                >
+                  Flight Booking Available
+                </Text>
+                <Text style={[styles.offerDescription, { color: "#1a5276" }]}>
+                  From {from} to {to} on {date} at ₹
+                  {Number(flightAmount).toLocaleString("en-IN")}
+                </Text>
               </View>
             </View>
             <TouchableOpacity onPress={() => Linking.openURL(flightLink)}>
-              <Text style={[styles.redeemBtn, { color: '#0e6655' }]}>Book Now →</Text>
+              <Text style={[styles.redeemBtn, { color: "#0e6655" }]}>
+                Book Now →
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -154,10 +165,9 @@ export default function CardBenefitsScreen() {
                 <View key={index} style={styles.offerCard}>
                   <View style={styles.offerLeft}>
                     <View style={styles.circleLogo} />
-                    <View>
-                      <Text style={styles.offerTitle}>{brand}</Text>
-                      <Text style={styles.offerDescription}>{benefitText}</Text>
-                    </View>
+                    <Text style={styles.offerDescription}>
+                      {card.benefitDetails || "Benefit details not available"}
+                    </Text>
                   </View>
                   <TouchableOpacity>
                     <Text style={styles.redeemBtn}>View</Text>
@@ -171,6 +181,8 @@ export default function CardBenefitsScreen() {
     </SafeAreaView>
   );
 }
+
+//run karwao 
 
 const styles = StyleSheet.create({
   safe: {
