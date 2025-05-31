@@ -11,6 +11,8 @@ dist/
 web-build/
 expo-env.d.ts
 
+axiosInstance.js
+
 # Native
 .kotlin/
 *.orig.*
@@ -70,3 +72,5 @@ ios/*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
 # Testing
 coverage/
 jest/
+
+utils\axiosInstance.js
