@@ -11,6 +11,8 @@ dist/
 web-build/
 expo-env.d.ts
 
+utils/axiosInstance.js
+mobile\utils\axiosInstance.js
 # Native
 .kotlin/
 *.orig.*
