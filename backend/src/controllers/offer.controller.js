@@ -3,10 +3,7 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
-/**
- * 🎯 API: POST /api/v1/offers/matching
- * 📦 Returns offers that match user's cards + category + subCategory
- */
+
 export const getMatchingOffers = asyncHandler(async (req, res) => {
   const { cards = [], category, subCategory } = req.body;
 
@@ -55,3 +52,13 @@ export const getSmartBuyOffers = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, offers, "SmartBuy offers fetched"));
 });
+
+// ✅ Get EaseMyTrip offers (public)
+export const getEaseMyTripOffers = async (req, res) => {
+  try {
+    const offers = await Offer.find({ source: "EaseMyTrip" }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: offers });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

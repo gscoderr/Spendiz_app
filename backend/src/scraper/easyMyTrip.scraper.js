@@ -1,127 +1,154 @@
+// src/scraper/easyMyTrip.scraper.js
+
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import path from "path";
+import Offer from "../models/offer.model.js";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
+import path from "path";
 import { fileURLToPath } from "url";
 
 puppeteer.use(StealthPlugin());
 
-// Setup path & env
+// Setup .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const EMT_URL = "https://www.easemytrip.com/offers/bank-deals.html";
 
-// 🔍 Extract ₹/INR value from string
+// 🔍 Extract ₹ amount
 function extractDiscountValue(text) {
-    const match = text?.match(/₹\s?(\d+[,\d]*)|INR\s?(\d+[,\d]*)/i);
-    if (match) {
-        const value = match[1] || match[2];
-        return parseInt(value.replace(/,/g, ""), 10);
-    }
-    return undefined;
+    const match = text?.match(/(?:₹|INR)\s?(\d+[,\d]*)/i);
+    return match ? parseInt(match[1].replace(/,/g, ""), 10) : 0;
 }
 
-const scrapeEaseMyTripOffers = async () => {
-    console.log("🔁 [EaseMyTrip] Scraper started...");
+// 🔍 Extract promo code
+function extractPromoCode(text) {
+    const match = text?.match(/code\s*[:\-]?\s*([A-Z0-9]+)/i);
+    return match ? match[1] : "";
+}
 
-    const offers = [];
-    let browser;
+// 🔍 Extract "31st Dec, 2025" to valid Date
+function extractValidTill(text) {
+    const match = text?.match(/(\d{1,2})\s*(st|nd|rd|th)?\s*([A-Za-z]+),?\s*(\d{4})/i);
+    if (!match) return null;
+    const dateStr = `${match[1]} ${match[3]} ${match[4]}`;
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
 
+// ✅ Final Scraper
+const scrapeEasyMyTripOffers = async () => {
     try {
-        console.log("⚡ Launching Puppeteer...");
-        browser = await puppeteer.launch({
+        console.log("🧹 Deleting old EaseMyTrip offers...");
+        await Offer.deleteMany({ source: "EaseMyTrip" });
+
+        console.log("⚡ Launching browser...");
+        const browser = await puppeteer.launch({
             headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"],
+            args: ["--no-sandbox", "--disable-setuid-sandbox"]
         });
 
         const page = await browser.newPage();
-        await page.setUserAgent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36"
-        );
+        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
 
-        console.log("🌍 Navigating to:", EMT_URL);
+        console.log("🌐 Visiting EaseMyTrip Offers page...");
         await page.goto(EMT_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-        console.log("⏳ Waiting & Scrolling...");
-        await new Promise((res) => setTimeout(res, 4000));
-        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await new Promise((res) => setTimeout(res, 2000));
-
-        console.log("🔎 Looking for ._offrbx blocks...");
+        console.log("⏳ Waiting for ._offrbx blocks...");
         await page.waitForSelector("._offrbx", { timeout: 15000 });
 
         const rawOffers = await page.evaluate(() => {
             return Array.from(document.querySelectorAll("._offrbx")).map((el) => {
-                const title = el.querySelector(".dealName")?.innerText?.trim() || "";
-                const desc = el.querySelector(".dealDtl")?.innerText?.trim() || "";
+                const lines = el.innerText?.split("\n").filter(Boolean) || [];
+                const title = lines[0] || "";
+                const desc = lines[1] || "";
+                const validity = lines.find(line => line.toLowerCase().includes("valid till")) || "";
                 const img = el.querySelector("img")?.src || "";
                 const link = el.href || "";
                 const promo = el.querySelector(".coupncode")?.innerText?.trim() || "";
-                const validity = el.querySelector(".booking_prd")?.innerText?.trim() || "";
                 return { title, desc, img, link, promo, validity };
             });
         });
 
+        await browser.close();
         console.log(`📦 Found ${rawOffers.length} raw offers`);
-        console.log("🔍 Logging first 3 raw offers for debugging ↓↓↓");
-        console.dir(rawOffers.slice(0, 3), { depth: null });
 
-        for (let i = 0; i < rawOffers.length; i++) {
-            const o = rawOffers[i];
-            console.log(`\n🔎 [Offer ${i + 1}] Raw Data:`, o);
-
-            if (!o.title || !o.desc) {
-                console.warn(`⚠️ Skipping Offer ${i + 1} — Missing title or description`);
-                continue;
-            }
-
-            const structured = {
-                title: o.title,
-                source: "EaseMyTrip",
-                bank: o.title.split(" ")[0] || "Unknown",
-                cardNames: [],
-                category: "Travel",
-                subCategory: "Flights",
-                partnerBrands: ["EaseMyTrip"],
-                offerType: "Instant Discount",
-                benefit: o.desc,
-                discountValue: extractDiscountValue(o.desc),
-                promoCode: o.promo || undefined,
-                paymentMode: "Full",
-                validFrom: new Date(),
-                validTill: new Date("2025-06-30"),
-                tnc: o.link,
-                image: o.img,
-                scrapedAt: new Date(),
-            };
-
-            console.log(`✅ Structured Offer ${i + 1}:`, structured);
-            offers.push(structured);
+        if (!rawOffers.length) {
+            console.warn("⚠️ No offers scraped. Exiting...");
+            return;
         }
 
+        // 🚩 Filter & Structure Offers
+        const knownBanks = ["HDFC", "ICICI", "SBI", "Axis", "RBL", "BOB", "Kotak", "Yes", "IDFC"];
+        const structuredOffers = rawOffers
+            .filter(o => o.title && o.desc)
+            .map((o) => {
+                const detectedBank = knownBanks.find(bank => o.title.toUpperCase().includes(bank.toUpperCase()));
+                return {
+                    title: o.title || "Untitled Offer",
+                    source: "EaseMyTrip",
+                    bank: detectedBank || "Various",
+                    cardNames: [],
+                    category: "Travel",
+                    subCategory: "Flights",
+                    partnerBrands: [o.title],
+                    offerType: "Discount",
+                    benefit: o.desc || "",
+                    discountValue: extractDiscountValue(o.desc) || 0,
+                    minTransaction: 0,
+                    paymentMode: "Full",
+                    promoCode: o.promo || extractPromoCode(o.desc) || "",
+                    validFrom: new Date(),
+                    validTill: extractValidTill(o.validity) || new Date(Date.now() + 30 * 86400000),
+                    tnc: o.link || "",
+                    image: o.img || "",
+                };
+            });
 
-        return offers;
+        // 💾 Save to DB
+        console.log("💾 Inserting offers into MongoDB...");
+        const savedOffers = await Offer.insertMany(structuredOffers);
+
+        console.log(`✅ Saved ${savedOffers.length} EaseMyTrip offers.`);
+
+        // 🖨️ Show each offer (nicely)
+        savedOffers.forEach((offer, idx) => {
+            console.log(`\n🔹 Offer ${idx + 1}:`);
+            console.log({
+                title: offer.title,
+                bank: offer.bank,
+                discountValue: offer.discountValue,
+                promoCode: offer.promoCode,
+                validTill: offer.validTill.toISOString().split("T")[0],
+                source: offer.source,
+                category: offer.category,
+                subCategory: offer.subCategory
+            });
+        });
+
+        console.log(`✅ Saved ${structuredOffers.length} EaseMyTrip offers.`);
     } catch (err) {
-        console.error("❌ [EaseMyTrip] Scraper Error:", err.message);
-        return [];
-    } finally {
-        if (browser) await browser.close();
+        console.error("❌ Scraper Error:", err.message);
     }
 };
 
-export default scrapeEaseMyTripOffers;
+export default scrapeEasyMyTripOffers;
 
-// Manual test support
+// 🔃 Allow CLI execution
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    scrapeEaseMyTripOffers()
+    mongoose.connect(process.env.MONGO_URI, { dbName: "spendizDB" })
         .then(() => {
-            console.log("🏁 Scraping completed.");
+            console.log("✅ MongoDB Connected");
+            return scrapeEasyMyTripOffers();
+        })
+        .then(() => {
+            console.log("🏁 Scraping complete. Exiting...");
             process.exit(0);
         })
         .catch((err) => {
-            console.error("❌ CLI Run Error:", err.message);
+            console.error("❌ MongoDB Error:", err.message);
             process.exit(1);
         });
 }
