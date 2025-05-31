@@ -36,7 +36,7 @@
 import mongoose from "mongoose";
 import Offer from "../models/offer.model.js";
 
-const MONGO_URI = "mongodb+srv://gorvindcode:8BQOS6zSsqulaSpendiz@cluster0.sueniyy.mongodb.net/spendizDB?retryWrites=true&w=majority&appName=Cluster0"; // Replace with your actual Atlas URI
+const MONGO_URI = ""; // Replace with your actual Atlas URI
 
 const run = async () => {
   try {

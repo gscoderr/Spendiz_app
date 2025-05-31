@@ -28,7 +28,7 @@ export default function OfferList({
       const res = await api.get("/cards/user");
       const cards = res.data.data || [];
       setUserCards(cards);
-      console.log("📦 Cards fetched:", cards);
+      
       return cards;
     } catch (err) {
       console.error("❌ Error fetching user cards:", err.message);
@@ -50,29 +50,29 @@ export default function OfferList({
   };
 
   // ✅ Fetch only matched offers based on cards
-  const fetchMatchedOffers = async (cardsList = userCards) => {
-    setLoading(true);
+  const fetchMatchedOffers = async () => {
+  setLoading(true);
+  if (!userCards || userCards.length === 0) {
+    console.warn("⚠️ No saved cards found. Skipping matched fetch.");
+    setOffers([]);
+    setLoading(false);
+    return;
+  }
 
-    if (!cardsList || cardsList.length === 0) {
-      console.warn("⚠️ No saved cards found. Skipping matched fetch.");
-      setOffers([]);
-      setLoading(false);
-      return;
-    }
+  try {
+    const res = await api.post("/offers/combined", {
+      cards: userCards,
+      category,
+      subCategory,
+    });
+    setOffers(res.data.data || []);
+  } catch (error) {
+    console.error("❌ Error fetching matched offers:", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      const res = await api.post("/offers/matching", {
-        cards: cardsList,
-        category,
-        subCategory,
-      });
-      setOffers(res.data.data || []);
-    } catch (error) {
-      console.error("❌ Error fetching matched offers:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ✅ Toggle view between matched and all offers
   const toggleView = () => {
