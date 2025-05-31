@@ -72,3 +72,5 @@ ios/*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
 # Testing
 coverage/
 jest/
+
+utils\axiosInstance.js
