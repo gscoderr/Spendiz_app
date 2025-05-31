@@ -1,49 +1,27 @@
-// // from this file we can create a model for the dynamic offers collection in the database
-// // backend/src/models/offer.model.js
-
-// import mongoose from "mongoose";
-
-// const offerSchema = new mongoose.Schema(
-//   {
-//     title: { type: String },                     // ✅ Add this (required for SmartBuy)
-//     source: { type: String },                    // ✅ Add optional source
-//     bank: { type: String, required: true },
-//     cardNames: [{ type: String }],
-//     category: { type: String },
-//     subCategory: { type: String },
-//     partnerBrands: [{ type: String }],
-//     offerType: { type: String },
-//     benefit: { type: String },                   // ✅ Keep optional (was required)
-//     minTransaction: { type: Number },
-//     paymentMode: { type: String },
-//     validFrom: { type: Date },
-//     validTill: { type: Date },
-//     tnc: { type: String }
-//   },
-//   { timestamps: true }
-// );
-
-// export default mongoose.model("Offer", offerSchema);
+// backend/src/models/offer.model.js
 
 import mongoose from "mongoose";
 
 const offerSchema = new mongoose.Schema(
   {
-    title: { type: String },                     // e.g. "Clove Dental"
-    source: { type: String },                    // e.g. "SmartBuy"
-    bank: { type: String, required: true },
+    title: { type: String },                      // e.g. "EaseMyTrip"
+    source: { type: String },                     // e.g. "SmartBuy", "Goibibo"
+    bank: { type: String, required: true },       // e.g. "ICICI", "HDFC"
     cardNames: [{ type: String }],
-    category: { type: String },
-    subCategory: { type: String },
+    category: { type: String },                   // e.g. "Travel", "Shopping"
+    subCategory: { type: String },                // e.g. "Flights", "Dining"
     partnerBrands: [{ type: String }],
-    offerType: { type: String },                 // e.g. "Discount"
-    benefit: { type: String },                   // e.g. "15% off on..."
+    offerType: { type: String },                  // e.g. "Cashback", "Discount"
+    benefit: { type: String },                    // full offer string
+    discountValue: { type: Number, default: 0 },  // ✅ NEW – numeric value of benefit
     minTransaction: { type: Number },
-    paymentMode: { type: String },
+    paymentMode: { type: String },                // e.g. "Full", "EMI"
+    promoCode: { type: String, default: "" },     // ✅ NEW – for frontend copy button
     validFrom: { type: Date },
     validTill: { type: Date },
-    tnc: { type: String },                       // offer link
-    image: { type: String },                     // ✅ NEW: offer image
+    tnc: { type: String },                        // offer terms URL
+    image: { type: String },                      // ✅ NEW – offer card image
+    scrapedAt: { type: Date, default: Date.now }  // ✅ NEW – helpful for refreshing / cron
   },
   { timestamps: true }
 );
