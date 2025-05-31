@@ -1,4 +1,3 @@
-// 📁 components/OfferList.jsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -20,20 +19,24 @@ export default function OfferList({
 }) {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMatched, setShowMatched] = useState(true); // ✅ default to matched
+  const [showMatched, setShowMatched] = useState(true);
   const [userCards, setUserCards] = useState([]);
 
-  // ✅ 1. Fetch user's saved cards from DB
+  // ✅ Fetch user's saved cards from DB
   const fetchUserCards = async () => {
     try {
       const res = await api.get("/cards/user");
-      setUserCards(res.data.data || []);
+      const cards = res.data.data || [];
+      setUserCards(cards);
+      console.log("📦 Cards fetched:", cards);
+      return cards;
     } catch (err) {
       console.error("❌ Error fetching user cards:", err.message);
+      return [];
     }
   };
 
-  // ✅ 2. Fetch all public offers for the platform
+  // ✅ Fetch all public offers for the platform
   const fetchAllOffers = async () => {
     setLoading(true);
     try {
@@ -46,10 +49,11 @@ export default function OfferList({
     }
   };
 
-  // ✅ 3. Fetch only matched offers
-  const fetchMatchedOffers = async () => {
+  // ✅ Fetch only matched offers based on cards
+  const fetchMatchedOffers = async (cardsList = userCards) => {
     setLoading(true);
-    if (!userCards || userCards.length === 0) {
+
+    if (!cardsList || cardsList.length === 0) {
       console.warn("⚠️ No saved cards found. Skipping matched fetch.");
       setOffers([]);
       setLoading(false);
@@ -58,7 +62,7 @@ export default function OfferList({
 
     try {
       const res = await api.post("/offers/matching", {
-        cards: userCards,
+        cards: cardsList,
         category,
         subCategory,
       });
@@ -70,40 +74,25 @@ export default function OfferList({
     }
   };
 
-  // ✅ 4. Toggle view logic (fixes reversed logic)
+  // ✅ Toggle view between matched and all offers
   const toggleView = () => {
     const next = !showMatched;
     setShowMatched(next);
     next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
-  // ✅ 5. Initial load → get cards → fetch matched
+  // ✅ Initial fetch: user cards + matched offers
   useEffect(() => {
-    fetchUserCards()
-    fetchMatchedOffers(); // default load
-    
+    const init = async () => {
+      const cards = await fetchUserCards();
+      await fetchMatchedOffers(cards);
+    };
+    init();
   }, []);
-
-  if (loading) {
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#3D5CFF"
-        style={{ marginTop: 24 }}
-      />
-    );
-  }
-
-  if (offers.length === 0) {
-    return (
-      <Text style={{ textAlign: "center", marginTop: 20 }}>
-        {showMatched ? "No matched offers." : "No offers available."}
-      </Text>
-    );
-  }
 
   return (
     <View style={styles.container}>
+      {/* Header always visible */}
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity onPress={toggleView}>
@@ -113,44 +102,48 @@ export default function OfferList({
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.grid}>
-        {offers.map((item) => (
-          <View key={item._id} style={styles.offerCard}>
-            <Image
-              source={{
-                uri: item.image || require("../../assets/banks/sbi.png"),
-              }}
-              style={styles.offerImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.offerTitle}>{item.title}</Text>
-            <Text
-              style={styles.offerBenefit}
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {item.benefit || "Special offer available!"}
-            </Text>
-            <Text style={styles.offerBank}>{item.bank}</Text>
-            <Text style={styles.offerExpiry}>
-              Valid till:{" "}
-              {new Date(item.validTill).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </Text>
-            {item.tnc && (
-              <Text
-                style={styles.offerLink}
-                onPress={() => Linking.openURL(item.tnc)}
-              >
-                View Details →
+      {loading ? (
+        <ActivityIndicator size="large" color="#3D5CFF" style={{ marginTop: 24 }} />
+      ) : offers.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 20 }}>
+          {showMatched ? "No matched offers." : "No offers available."}
+        </Text>
+      ) : (
+        <ScrollView contentContainerStyle={styles.grid}>
+          {offers.map((item) => (
+            <View key={item._id} style={styles.offerCard}>
+              <Image
+                source={{
+                  uri: item.image || require("../../assets/banks/sbi.png"),
+                }}
+                style={styles.offerImage}
+                resizeMode="cover"
+              />
+              <Text style={styles.offerTitle}>{item.title}</Text>
+              <Text style={styles.offerBenefit} numberOfLines={2} ellipsizeMode="tail">
+                {item.benefit || "Special offer available!"}
               </Text>
-            )}
-          </View>
-        ))}
-      </ScrollView>
+              <Text style={styles.offerBank}>{item.bank}</Text>
+              <Text style={styles.offerExpiry}>
+                Valid till:{" "}
+                {new Date(item.validTill).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
+              {item.tnc && (
+                <Text
+                  style={styles.offerLink}
+                  onPress={() => Linking.openURL(item.tnc)}
+                >
+                  View Details →
+                </Text>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
