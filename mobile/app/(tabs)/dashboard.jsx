@@ -120,7 +120,7 @@ export default function Dashboard() {
               { label: "Entertainment", icon: "🎬", category: "entertainment" },
               { label: "Fuel", icon: "⛽", category: "fuel" },
               { label: "Grocery", icon: "🛒", category: "grocery" },
-             ].map(({ label, icon, category }) => (
+            ].map(({ label, icon, category }) => (
               <TouchableOpacity
                 key={category}
                 style={styles.categoryIconBox}
@@ -138,7 +138,12 @@ export default function Dashboard() {
               </TouchableOpacity>
             ))}
           </View>
-            <OfferList />
+          <OfferList
+            title="✈️ Flight Offers"
+            platform="easemytrip"
+            category="Travel"
+            subCategory="Flights"
+          />
         </View>
 
 
@@ -251,7 +256,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#cccccc",
     marginBottom: 20,
   },
-  
+
 
   last4: {
     color: "#ccc",

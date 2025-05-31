@@ -65,7 +65,7 @@ export default function CreditCards() {
           subCategory: "",
         });
 
-        console.log("📦 Offers fetched from backend:", res);
+        
 
         const offerMap = {};
         res.forEach((offer) => {

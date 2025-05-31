@@ -1,3 +1,4 @@
+// 📁 components/OfferList.jsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -7,35 +8,36 @@ import {
   ActivityIndicator,
   Linking,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import api from "../../utils/axiosInstance";
 
-export default function OfferList() {
+export default function OfferList({
+  title = "🔥 Offers",
+  platform = "easemytrip",
+  category = "Travel",
+  subCategory = "Flights",
+}) {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMatched, setShowMatched] = useState(false);
+  const [showMatched, setShowMatched] = useState(true); // ✅ default to matched
   const [userCards, setUserCards] = useState([]);
 
-  // Fetch user cards from backend
-  useEffect(() => {
-    const fetchUserCards = async () => {
-      try {
-        const res = await api.get("/cards/user");
-        setUserCards(res.data.data || []);
-        console.log("💳 Fetched user cards from DB:", res.data.data);
-      } catch (err) {
-        console.error("❌ Error fetching user cards:", err.message);
-      }
-    };
+  // ✅ 1. Fetch user's saved cards from DB
+  const fetchUserCards = async () => {
+    try {
+      const res = await api.get("/cards/user");
+      setUserCards(res.data.data || []);
+    } catch (err) {
+      console.error("❌ Error fetching user cards:", err.message);
+    }
+  };
 
-    fetchUserCards();
-  }, []);
-
-  // Fetch all public offers
+  // ✅ 2. Fetch all public offers for the platform
   const fetchAllOffers = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/offers/easemytrip");
+      const res = await api.get(`/offers/${platform}`);
       setOffers(res.data.data || []);
     } catch (error) {
       console.error("❌ Error fetching offers:", error.message);
@@ -44,10 +46,9 @@ export default function OfferList() {
     }
   };
 
-  // Fetch offers that match user cards
+  // ✅ 3. Fetch only matched offers
   const fetchMatchedOffers = async () => {
     setLoading(true);
-
     if (!userCards || userCards.length === 0) {
       console.warn("⚠️ No saved cards found. Skipping matched fetch.");
       setOffers([]);
@@ -58,8 +59,8 @@ export default function OfferList() {
     try {
       const res = await api.post("/offers/matching", {
         cards: userCards,
-        category: "Travel",
-        subCategory: "Flights",
+        category,
+        subCategory,
       });
       setOffers(res.data.data || []);
     } catch (error) {
@@ -69,19 +70,18 @@ export default function OfferList() {
     }
   };
 
-  // Toggle between all and matched
+  // ✅ 4. Toggle view logic (fixes reversed logic)
   const toggleView = () => {
-    if (showMatched) {
-      fetchAllOffers();
-    } else {
-      fetchMatchedOffers();
-    }
-    setShowMatched(!showMatched);
+    const next = !showMatched;
+    setShowMatched(next);
+    next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
-  // Auto-load all offers initially
+  // ✅ 5. Initial load → get cards → fetch matched
   useEffect(() => {
-    fetchAllOffers();
+    fetchUserCards()
+    fetchMatchedOffers(); // default load
+    
   }, []);
 
   if (loading) {
@@ -97,9 +97,7 @@ export default function OfferList() {
   if (offers.length === 0) {
     return (
       <Text style={{ textAlign: "center", marginTop: 20 }}>
-        {showMatched
-          ? "No matched offers for your cards."
-          : "No offers available."}
+        {showMatched ? "No matched offers." : "No offers available."}
       </Text>
     );
   }
@@ -107,7 +105,7 @@ export default function OfferList() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>🔥 Offers</Text>
+        <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity onPress={toggleView}>
           <Text style={styles.toggleText}>
             {showMatched ? "View All Offers" : "🎯 Your Card Rewards"}
@@ -115,23 +113,25 @@ export default function OfferList() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grid}>
+      <ScrollView contentContainerStyle={styles.grid}>
         {offers.map((item) => (
           <View key={item._id} style={styles.offerCard}>
             <Image
-              source={{ uri: item.image || require("../../assets/banks/sbi.png") }}
+              source={{
+                uri: item.image || require("../../assets/banks/sbi.png"),
+              }}
               style={styles.offerImage}
               resizeMode="cover"
             />
-
             <Text style={styles.offerTitle}>{item.title}</Text>
-
-            <Text style={styles.offerBenefit} numberOfLines={2} ellipsizeMode="tail">
+            <Text
+              style={styles.offerBenefit}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
               {item.benefit || "Special offer available!"}
             </Text>
-
             <Text style={styles.offerBank}>{item.bank}</Text>
-
             <Text style={styles.offerExpiry}>
               Valid till:{" "}
               {new Date(item.validTill).toLocaleDateString("en-IN", {
@@ -140,15 +140,17 @@ export default function OfferList() {
                 year: "numeric",
               })}
             </Text>
-
             {item.tnc && (
-              <Text style={styles.offerLink} onPress={() => Linking.openURL(item.tnc)}>
+              <Text
+                style={styles.offerLink}
+                onPress={() => Linking.openURL(item.tnc)}
+              >
                 View Details →
               </Text>
             )}
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
