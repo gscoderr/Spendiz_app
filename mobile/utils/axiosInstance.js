@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Constants from 'expo-constants';
 
 // 🧠 Use manifest for better cross-platform compatibility
-const BASE_URL = 'http://192.168.1.39:5000';
+const BASE_URL = 'http://192.168.7.6:5000';
 console.log("✅ BASE_URL →", BASE_URL); // Debug log nhi kuch match hoga to user matched offers me aa rha hai . ho tya to mujhe dika
 
 const api = axios.create({
