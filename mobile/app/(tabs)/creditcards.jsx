@@ -45,7 +45,7 @@ export default function CreditCards() {
       try {
         const res = await api.get("/cards/user");
         setCards(res.data.data);
-        console.log("💳 Saved Cards from DB:", res.data.data);
+        // console.log("💳 Saved Cards from DB:", res.data.data);
 
       } catch (err) {
         console.error("❌ Error fetching cards:", err.message);

@@ -13,13 +13,19 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
 
   const today = new Date();
 
+  // 📋 Show all received user cards
+  console.log("👤 Received User Cards for Matching:");
+  cards.forEach((card) => {
+    console.log(`- ${card.bank} | ${card.cardName}`);
+  });
+
   const conditions = cards.map((card) => {
     if (!card.bank || !card.cardName) return null;
 
     return {
       $and: [
         {
-          bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") }, // bank must match
+          bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") },
         },
         {
           $or: [
@@ -39,16 +45,30 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Valid card data required");
   }
 
-  console.log("🧠 Matching with strict priority on bank and cardName...");
-  console.log("🔍 Query conditions:", JSON.stringify(conditions, null, 2));
+  // 🧠 Debug log for conditions
+  console.log("🔍 MongoDB Conditions:");
+  console.dir(conditions, { depth: null });
 
-  const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
+  // ✅ Match offers using OR of all conditions
+ const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
+
+// ✅ Log: Total and Unique Banks
+const bankList = offers.map((o) => o.bank?.trim()).filter(Boolean);
+const uniqueBanks = [...new Set(bankList)];
+
+console.log("✅ Total Matched Offers:", offers.length);
+console.log("🏦 Banks in Offers:", uniqueBanks);
+
+offers.forEach((offer) => {
+  const cards = offer.cardNames?.length > 0 ? offer.cardNames.join(", ") : "All Cards";
+  console.log(`➡️ ${offer.bank} | ${cards}`);
+});
+
 
   res.status(200).json(new ApiResponse(200, offers, "Strict-matched offers fetched"));
 });
 
-
-// ✅ Get all SmartBuy offers (live + sorted)
+// ✅ Get all SmartBuy offers
 export const getSmartBuyOffers = asyncHandler(async (req, res) => {
   const today = new Date();
 
@@ -60,7 +80,7 @@ export const getSmartBuyOffers = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, offers, "SmartBuy offers fetched"));
 });
 
-// ✅ Get all EaseMyTrip offers (public)
+// ✅ Get all EaseMyTrip offers
 export const getEaseMyTripOffers = async (req, res) => {
   try {
     const offers = await Offer.find({ source: "EaseMyTrip" }).sort({ createdAt: -1 });
