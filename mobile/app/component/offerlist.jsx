@@ -1,4 +1,3 @@
-// 📁 mobile/app/component/offerlist.jsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -20,46 +19,34 @@ export default function OfferList({
 }) {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMatched, setShowMatched] = useState(true);
+  const [showMatched, setShowMatched] = useState(true); // default to matched view
   const [userCards, setUserCards] = useState([]);
 
+  // ✅ Fetch user cards
   const fetchUserCards = async () => {
     try {
       const res = await api.get("/cards/user");
-      console.log("🧩 Cards fetched from /cards/user:", res.data.data);
-      setUserCards(res.data.data || []);
+      const cards = res.data.data || [];
+      console.log("🧩 Cards from /cards/user:", cards);
+      setUserCards(cards);
+      return cards;
     } catch (err) {
       console.error("❌ Error fetching user cards:", err.message);
+      return [];
     }
   };
 
-  const fetchAllOffers = async () => {
+  // ✅ Fetch matched offers using cards
+  const fetchMatchedOffers = async (cards = userCards) => {
     setLoading(true);
-    try {
-      const res = await api.get(`/offers/${platform}`);
-      console.log("🌐 All offers fetched:", res.data.data);
-      setOffers(res.data.data || []);
-    } catch (error) {
-      console.error("❌ Error fetching offers:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMatchedOffers = async () => {
-    setLoading(true);
-
-    // 🟡 Step 1: Debug what’s inside userCards
-    console.log("🟡 Cards for offer match:", userCards);
     console.log("📤 Sending to /offers/matching:", {
-      cards: userCards,
+      cards,
       category,
       subCategory,
     });
 
-    // 🛑 Step 2: Guard if no cards
-    if (!userCards || userCards.length === 0) {
-      console.warn("⚠️ No saved cards found. Skipping matched fetch.");
+    if (!cards || cards.length === 0) {
+      console.warn("⚠️ No cards to match. Skipping matched offers.");
       setOffers([]);
       setLoading(false);
       return;
@@ -67,12 +54,11 @@ export default function OfferList({
 
     try {
       const res = await api.post("/offers/matching", {
-        cards: userCards,
+        cards,
         category,
         subCategory,
       });
-
-      console.log("✅ Matched offers received:", res.data.data);
+      console.log("🎯 Matched offers received:", res.data.data);
       setOffers(res.data.data || []);
     } catch (error) {
       console.error("❌ Error fetching matched offers:", error.response?.data || error.message);
@@ -81,16 +67,43 @@ export default function OfferList({
     }
   };
 
+  // ✅ Fetch all public offers for platform
+  const fetchAllOffers = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/offers/${platform}`);
+      console.log("🌐 All offers fetched:", res.data.data);
+      setOffers(res.data.data || []);
+    } catch (error) {
+      console.error("❌ Error fetching all offers:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Toggle between matched & all
   const toggleView = () => {
     const next = !showMatched;
     setShowMatched(next);
     next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
+  // ✅ Initial load: first fetch cards → then fetch matched
   useEffect(() => {
-    fetchUserCards().then(() => {
-      fetchMatchedOffers(); // only after cards fetched
-    });
+    const init = async () => {
+      const cards = await fetchUserCards();
+
+      if (cards.length > 0) {
+        console.log("🎯 Matched offers will be shown first");
+        fetchMatchedOffers(cards);
+      } else {
+        console.warn("🟡 No cards found. Loading all offers instead.");
+        setShowMatched(false); // switch toggle text
+        fetchAllOffers();
+      }
+    };
+
+    init();
   }, []);
 
   if (loading) {
@@ -112,16 +125,33 @@ export default function OfferList({
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <TouchableOpacity onPress={toggleView}>
-          <Text style={styles.toggleText}>
-            {showMatched ? "View All Offers" : "🎯 Your Card Rewards"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+  <View style={styles.container}>
+    {/* ✅ ALWAYS VISIBLE HEADER */}
+    <View style={styles.header}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <TouchableOpacity onPress={toggleView}>
+        <Text style={styles.toggleText}>
+          {showMatched ? "View All Offers" : "🎯 Your Card Rewards"}
+        </Text>
+      </TouchableOpacity>
+    </View>
 
+    {/* 🔁 CONDITIONAL BELOW HEADER */}
+    {loading && (
+      <ActivityIndicator
+        size="large"
+        color="#3D5CFF"
+        style={{ marginTop: 24 }}
+      />
+    )}
+
+    {!loading && offers.length === 0 && (
+      <Text style={{ textAlign: "center", marginTop: 20 }}>
+        {showMatched ? "No matched offers." : "No offers available."}
+      </Text>
+    )}
+
+    {!loading && offers.length > 0 && (
       <ScrollView contentContainerStyle={styles.grid}>
         {offers.map((item) => (
           <View key={item._id} style={styles.offerCard}>
@@ -160,8 +190,11 @@ export default function OfferList({
           </View>
         ))}
       </ScrollView>
-    </View>
-  );
+    )}
+  </View>
+);
+
+
 }
 
 const styles = StyleSheet.create({
