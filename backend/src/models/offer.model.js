@@ -4,26 +4,28 @@ import mongoose from "mongoose";
 
 const offerSchema = new mongoose.Schema(
   {
-    title: { type: String },                      // e.g. "EaseMyTrip"
-    source: { type: String },                     // e.g. "SmartBuy", "Goibibo"
-    bank: { type: String, required: true },       // e.g. "ICICI", "HDFC"
+    title: { type: String },
+    source: { type: String },
+    bank: { type: String, required: true },
     cardNames: [{ type: String }],
-    category: { type: String },                   // e.g. "Travel", "Shopping"
-    subCategory: { type: String },                // e.g. "Flights", "Dining"
+    category: { type: String },
+    subCategory: { type: String },
     partnerBrands: [{ type: String }],
-    offerType: { type: String },                  // e.g. "Cashback", "Discount"
-    benefit: { type: String },                    // full offer string
-    discountValue: { type: Number, default: 0 },  // ✅ NEW – numeric value of benefit
+    offerType: { type: String },
+    benefit: { type: String },
+    discountValue: { type: Number, default: 0 },
     minTransaction: { type: Number },
-    paymentMode: { type: String },                // e.g. "Full", "EMI"
-    promoCode: { type: String, default: "" },     // ✅ NEW – for frontend copy button
+    paymentMode: { type: String },
+    promoCode: { type: String, default: "" },
     validFrom: { type: Date },
     validTill: { type: Date },
-    tnc: { type: String },                        // offer terms URL
-    image: { type: String },                      // ✅ NEW – offer card image
-    scrapedAt: { type: Date, default: Date.now }  // ✅ NEW – helpful for refreshing / cron
+    tnc: { type: String },
+    image: { type: String },
+    scrapedAt: { type: Date, default: Date.now },
+    domTree: { type: mongoose.Schema.Types.Mixed } // ✅ new field
   },
   { timestamps: true }
 );
+
 
 export default mongoose.model("Offer", offerSchema);
