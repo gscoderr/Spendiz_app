@@ -1,4 +1,4 @@
-// 📁 components/OfferList.jsx
+// 📁 mobile/app/component/offerlist.jsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -20,24 +20,24 @@ export default function OfferList({
 }) {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMatched, setShowMatched] = useState(true); // ✅ default to matched
+  const [showMatched, setShowMatched] = useState(true);
   const [userCards, setUserCards] = useState([]);
 
-  // ✅ 1. Fetch user's saved cards from DB
   const fetchUserCards = async () => {
     try {
       const res = await api.get("/cards/user");
+      console.log("🧩 Cards fetched from /cards/user:", res.data.data);
       setUserCards(res.data.data || []);
     } catch (err) {
       console.error("❌ Error fetching user cards:", err.message);
     }
   };
 
-  // ✅ 2. Fetch all public offers for the platform
   const fetchAllOffers = async () => {
     setLoading(true);
     try {
       const res = await api.get(`/offers/${platform}`);
+      console.log("🌐 All offers fetched:", res.data.data);
       setOffers(res.data.data || []);
     } catch (error) {
       console.error("❌ Error fetching offers:", error.message);
@@ -46,9 +46,18 @@ export default function OfferList({
     }
   };
 
-  // ✅ 3. Fetch only matched offers
   const fetchMatchedOffers = async () => {
     setLoading(true);
+
+    // 🟡 Step 1: Debug what’s inside userCards
+    console.log("🟡 Cards for offer match:", userCards);
+    console.log("📤 Sending to /offers/matching:", {
+      cards: userCards,
+      category,
+      subCategory,
+    });
+
+    // 🛑 Step 2: Guard if no cards
     if (!userCards || userCards.length === 0) {
       console.warn("⚠️ No saved cards found. Skipping matched fetch.");
       setOffers([]);
@@ -62,26 +71,26 @@ export default function OfferList({
         category,
         subCategory,
       });
+
+      console.log("✅ Matched offers received:", res.data.data);
       setOffers(res.data.data || []);
     } catch (error) {
-      console.error("❌ Error fetching matched offers:", error.message);
+      console.error("❌ Error fetching matched offers:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ 4. Toggle view logic (fixes reversed logic)
   const toggleView = () => {
     const next = !showMatched;
     setShowMatched(next);
     next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
-  // ✅ 5. Initial load → get cards → fetch matched
   useEffect(() => {
-    fetchUserCards()
-    fetchMatchedOffers(); // default load
-    
+    fetchUserCards().then(() => {
+      fetchMatchedOffers(); // only after cards fetched
+    });
   }, []);
 
   if (loading) {
