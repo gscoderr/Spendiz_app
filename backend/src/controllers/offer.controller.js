@@ -19,22 +19,13 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
     return {
       $and: [
         {
-          $or: [
-            { bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") } },
-            { bank: { $regex: /^Various$/i } }, // support 'Various' bank
-          ],
+          bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") }, // bank must match
         },
         {
           $or: [
+            { cardNames: { $elemMatch: { $regex: new RegExp(`^${card.cardName.trim()}$`, "i") } } },
             { cardNames: { $exists: false } },
             { cardNames: { $size: 0 } },
-            {
-              cardNames: {
-                $elemMatch: {
-                  $regex: new RegExp(`^${card.cardName.trim()}$`, "i"),
-                },
-              },
-            },
           ],
         },
         ...(category ? [{ category }] : []),
@@ -48,12 +39,14 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Valid card data required");
   }
 
-  console.log("🔍 Matching conditions:", JSON.stringify(conditions, null, 2));
+  console.log("🧠 Matching with strict priority on bank and cardName...");
+  console.log("🔍 Query conditions:", JSON.stringify(conditions, null, 2));
 
   const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
 
-  res.status(200).json(new ApiResponse(200, offers, "Offers fetched successfully"));
+  res.status(200).json(new ApiResponse(200, offers, "Strict-matched offers fetched"));
 });
+
 
 // ✅ Get all SmartBuy offers (live + sorted)
 export const getSmartBuyOffers = asyncHandler(async (req, res) => {
