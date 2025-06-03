@@ -125,16 +125,33 @@ export default function OfferList({
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <TouchableOpacity onPress={toggleView}>
-          <Text style={styles.toggleText}>
-            {showMatched ? "View All Offers" : "🎯 Your Card Rewards"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+  <View style={styles.container}>
+    {/* ✅ ALWAYS VISIBLE HEADER */}
+    <View style={styles.header}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <TouchableOpacity onPress={toggleView}>
+        <Text style={styles.toggleText}>
+          {showMatched ? "View All Offers" : "🎯 Your Card Rewards"}
+        </Text>
+      </TouchableOpacity>
+    </View>
 
+    {/* 🔁 CONDITIONAL BELOW HEADER */}
+    {loading && (
+      <ActivityIndicator
+        size="large"
+        color="#3D5CFF"
+        style={{ marginTop: 24 }}
+      />
+    )}
+
+    {!loading && offers.length === 0 && (
+      <Text style={{ textAlign: "center", marginTop: 20 }}>
+        {showMatched ? "No matched offers." : "No offers available."}
+      </Text>
+    )}
+
+    {!loading && offers.length > 0 && (
       <ScrollView contentContainerStyle={styles.grid}>
         {offers.map((item) => (
           <View key={item._id} style={styles.offerCard}>
@@ -173,8 +190,11 @@ export default function OfferList({
           </View>
         ))}
       </ScrollView>
-    </View>
-  );
+    )}
+  </View>
+);
+
+
 }
 
 const styles = StyleSheet.create({
