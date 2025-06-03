@@ -106,6 +106,24 @@ export default function OfferList({
     init();
   }, []);
 
+  if (loading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#3D5CFF"
+        style={{ marginTop: 24 }}
+      />
+    );
+  }
+
+  if (offers.length === 0) {
+    return (
+      <Text style={{ textAlign: "center", marginTop: 20 }}>
+        {showMatched ? "No matched offers." : "No offers available."}
+      </Text>
+    );
+  }
+
   return (
   <View style={styles.container}>
     {/* ✅ ALWAYS VISIBLE HEADER */}

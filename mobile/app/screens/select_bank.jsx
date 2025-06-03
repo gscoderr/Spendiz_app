@@ -29,8 +29,7 @@ const otherBanks = [
   { name: 'CITI BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
   { name: 'STANDARD CHARTERED', icon: require('../../assets/banks/federal_bank.jpeg') },
   { name: 'BANK OF BARODA', icon: require('../../assets/banks/federal_bank.jpeg') },
-  // { name: 'FEDERAL BANK', icon: require('../../assets/banks/federal_bank.jpeg') },
-  // Add more as needed
+  // { name: 'FEDERAL BANK', icon: require('../../assets/banks/federal_bank.jpeg') },   
 ];
 
 export default function SelectBankModal({ visible, onClose, onSelect }) {
