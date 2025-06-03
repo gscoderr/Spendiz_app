@@ -76,39 +76,83 @@ export default function OfferList({
     }
   };
 
-  const fetchAllOffers = async () => {
-    setLoading(true);
-    try {
-      // Step 1: Get user cards
-      const resCards = await api.get("/cards/user");
-      const cards = resCards.data.data || [];
-      const userBanks = [
-        ...new Set(cards.map((c) => normalizeBankName(c.bank)).filter(Boolean)),
-      ];
-      console.log("👤 Normalized User Banks:", userBanks);
+const fetchAllOffers = async () => {
+  setLoading(true);
+  try {
+    // Step 1: Fetch user cards
+    const resCards = await api.get("/cards/user");
+    const userCards = resCards.data.data || [];
 
-      // Step 2: Fetch all public offers
-      const res = await api.get(`/offers/${platform}`);
-      const allOffers = res.data.data || [];
+    // Group user cards by normalized bank
+    const userCardMap = {};
+    userCards.forEach((card) => {
+      const bankKey = normalizeBankName(card.bank);
+      const cardName = card.cardName?.trim();
+      if (!bankKey || !cardName) return;
 
-      // Step 3: Filter offers by normalized bank name
-      const filteredOffers = allOffers.filter((o) =>
-        userBanks.includes(normalizeBankName(o.bank))
+      if (!userCardMap[bankKey]) userCardMap[bankKey] = new Set();
+      userCardMap[bankKey].add(cardName);
+    });
+
+    // 🔍 Log grouped user cards
+    console.log("👤 User Cards Grouped:");
+    Object.entries(userCardMap).forEach(([bank, names]) => {
+      console.log(`- ${bank}: ${Array.from(names).join(", ")}`);
+    });
+
+    // Step 2: Fetch all platform offers
+    const res = await api.get(`/offers/${platform}`);
+    const allOffers = res.data.data || [];
+    console.log(`🌐 Total Offers from ${platform}:`, allOffers.length);
+
+    // ✅ Step 3: Filter offers by bank
+    const bankFiltered = allOffers.filter((offer) => {
+      const bank = normalizeBankName(offer.bank);
+      return !!userCardMap[bank]; // Keep offers from banks the user has cards for
+    });
+
+    console.log(`🏦 Bank-Filtered Offers: ${bankFiltered.length}`);
+
+    // ✅ Step 4: Now do cardName filtering
+    const finalOffers = bankFiltered.filter((offer) => {
+      const offerBank = normalizeBankName(offer.bank);
+      const offerCardNames = offer.cardNames || [];
+      const userCardNames = userCardMap[offerBank];
+
+      if (!userCardNames) return false; // safety
+
+      if (!Array.isArray(offerCardNames) || offerCardNames.length === 0) {
+        console.log(`✅ Matched (All Cards): ${offer.bank} → ${offer.title}`);
+        return true;
+      }
+
+      const isMatched = Array.from(userCardNames).some((userCardName) =>
+        offerCardNames.includes(userCardName)
       );
 
-      const matchedBanks = [
-        ...new Set(filteredOffers.map((o) => normalizeBankName(o.bank))),
-      ];
-      console.log("🌐 Banks in View All Offers (filtered):", matchedBanks);
-      console.log("📦 Total Filtered Offers:", filteredOffers.length);
+      if (isMatched) {
+        console.log(`✅ Matched: ${offer.bank} | ${offerCardNames.join(", ")} ← user has ${Array.from(userCardNames).join(", ")}`);
+      } else {
+        console.log(`❌ Skipped (CardName mismatch): ${offer.bank} | ${offerCardNames.join(", ")} ← user has ${Array.from(userCardNames).join(", ")}`);
+      }
 
-      setOffers(filteredOffers);
-    } catch (error) {
-      console.error("❌ Error fetching all offers:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return isMatched;
+    });
+
+    // ✅ Final Logs
+    const matchedBanks = [...new Set(finalOffers.map((o) => normalizeBankName(o.bank)))];
+    console.log("🎯 Final Matched Banks:", matchedBanks);
+    console.log("📦 Total Filtered Offers:", finalOffers.length);
+
+    setOffers(finalOffers);
+  } catch (error) {
+    console.error("❌ Error in fetchAllOffers:", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const toggleView = () => {
     const next = !showMatched;
