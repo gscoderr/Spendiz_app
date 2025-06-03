@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
-// ✅ Strict Match: bank + cardName both required
+// ✅ Updated Strict Match: also supports bank: 'Various' and cardNames: []
 export const getMatchingOffers = asyncHandler(async (req, res) => {
   const { cards = [], category, subCategory } = req.body;
 
@@ -17,21 +17,38 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
     if (!card.bank || !card.cardName) return null;
 
     return {
-      bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") }, // strict match (bank)
-      cardNames: {
-        $elemMatch: {
-          $regex: new RegExp(`^${card.cardName.trim()}$`, "i"), // strict match (card name)
+      $and: [
+        {
+          $or: [
+            { bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") } },
+            { bank: { $regex: /^Various$/i } }, // support 'Various' bank
+          ],
         },
-      },
-      ...(category && { category }),
-      ...(subCategory && { subCategory }),
-      validTill: { $gte: today },
+        {
+          $or: [
+            { cardNames: { $exists: false } },
+            { cardNames: { $size: 0 } },
+            {
+              cardNames: {
+                $elemMatch: {
+                  $regex: new RegExp(`^${card.cardName.trim()}$`, "i"),
+                },
+              },
+            },
+          ],
+        },
+        ...(category ? [{ category }] : []),
+        ...(subCategory ? [{ subCategory }] : []),
+        { validTill: { $gte: today } },
+      ],
     };
-  }).filter(Boolean); // remove null entries
+  }).filter(Boolean);
 
   if (!conditions.length) {
     throw new ApiError(400, "Valid card data required");
   }
+
+  console.log("🔍 Matching conditions:", JSON.stringify(conditions, null, 2));
 
   const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
 
