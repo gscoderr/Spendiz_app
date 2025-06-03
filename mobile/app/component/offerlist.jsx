@@ -19,16 +19,16 @@ export default function OfferList({
 }) {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMatched, setShowMatched] = useState(true);
+  const [showMatched, setShowMatched] = useState(true); // default to matched view
   const [userCards, setUserCards] = useState([]);
 
-  // ✅ Fetch user's saved cards from DB
+  // ✅ Fetch user cards
   const fetchUserCards = async () => {
     try {
       const res = await api.get("/cards/user");
       const cards = res.data.data || [];
+      console.log("🧩 Cards from /cards/user:", cards);
       setUserCards(cards);
-      console.log("📦 Cards fetched:", cards);
       return cards;
     } catch (err) {
       console.error("❌ Error fetching user cards:", err.message);
@@ -36,25 +36,17 @@ export default function OfferList({
     }
   };
 
-  // ✅ Fetch all public offers for the platform
-  const fetchAllOffers = async () => {
+  // ✅ Fetch matched offers using cards
+  const fetchMatchedOffers = async (cards = userCards) => {
     setLoading(true);
-    try {
-      const res = await api.get(`/offers/${platform}`);
-      setOffers(res.data.data || []);
-    } catch (error) {
-      console.error("❌ Error fetching offers:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("📤 Sending to /offers/matching:", {
+      cards,
+      category,
+      subCategory,
+    });
 
-  // ✅ Fetch only matched offers based on cards
-  const fetchMatchedOffers = async (cardsList = userCards) => {
-    setLoading(true);
-
-    if (!cardsList || cardsList.length === 0) {
-      console.warn("⚠️ No saved cards found. Skipping matched fetch.");
+    if (!cards || cards.length === 0) {
+      console.warn("⚠️ No cards to match. Skipping matched offers.");
       setOffers([]);
       setLoading(false);
       return;
@@ -62,37 +54,78 @@ export default function OfferList({
 
     try {
       const res = await api.post("/offers/matching", {
-        cards: cardsList,
+        cards,
         category,
         subCategory,
       });
+      console.log("🎯 Matched offers received:", res.data.data);
       setOffers(res.data.data || []);
     } catch (error) {
-      console.error("❌ Error fetching matched offers:", error.message);
+      console.error("❌ Error fetching matched offers:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Toggle view between matched and all offers
+  // ✅ Fetch all public offers for platform
+  const fetchAllOffers = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/offers/${platform}`);
+      console.log("🌐 All offers fetched:", res.data.data);
+      setOffers(res.data.data || []);
+    } catch (error) {
+      console.error("❌ Error fetching all offers:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Toggle between matched & all
   const toggleView = () => {
     const next = !showMatched;
     setShowMatched(next);
     next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
-  // ✅ Initial fetch: user cards + matched offers
+  // ✅ Initial load: first fetch cards → then fetch matched
   useEffect(() => {
     const init = async () => {
       const cards = await fetchUserCards();
-      await fetchMatchedOffers(cards);
+
+      if (cards.length > 0) {
+        console.log("🎯 Matched offers will be shown first");
+        fetchMatchedOffers(cards);
+      } else {
+        console.warn("🟡 No cards found. Loading all offers instead.");
+        setShowMatched(false); // switch toggle text
+        fetchAllOffers();
+      }
     };
+
     init();
   }, []);
 
+  if (loading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#3D5CFF"
+        style={{ marginTop: 24 }}
+      />
+    );
+  }
+
+  if (offers.length === 0) {
+    return (
+      <Text style={{ textAlign: "center", marginTop: 20 }}>
+        {showMatched ? "No matched offers." : "No offers available."}
+      </Text>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Header always visible */}
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>{title}</Text>
         <TouchableOpacity onPress={toggleView}>
@@ -102,48 +135,44 @@ export default function OfferList({
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#3D5CFF" style={{ marginTop: 24 }} />
-      ) : offers.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          {showMatched ? "No matched offers." : "No offers available."}
-        </Text>
-      ) : (
-        <ScrollView contentContainerStyle={styles.grid}>
-          {offers.map((item) => (
-            <View key={item._id} style={styles.offerCard}>
-              <Image
-                source={{
-                  uri: item.image || require("../../assets/banks/sbi.png"),
-                }}
-                style={styles.offerImage}
-                resizeMode="cover"
-              />
-              <Text style={styles.offerTitle}>{item.title}</Text>
-              <Text style={styles.offerBenefit} numberOfLines={2} ellipsizeMode="tail">
-                {item.benefit || "Special offer available!"}
+      <ScrollView contentContainerStyle={styles.grid}>
+        {offers.map((item) => (
+          <View key={item._id} style={styles.offerCard}>
+            <Image
+              source={{
+                uri: item.image || require("../../assets/banks/sbi.png"),
+              }}
+              style={styles.offerImage}
+              resizeMode="cover"
+            />
+            <Text style={styles.offerTitle}>{item.title}</Text>
+            <Text
+              style={styles.offerBenefit}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.benefit || "Special offer available!"}
+            </Text>
+            <Text style={styles.offerBank}>{item.bank}</Text>
+            <Text style={styles.offerExpiry}>
+              Valid till:{" "}
+              {new Date(item.validTill).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </Text>
+            {item.tnc && (
+              <Text
+                style={styles.offerLink}
+                onPress={() => Linking.openURL(item.tnc)}
+              >
+                View Details →
               </Text>
-              <Text style={styles.offerBank}>{item.bank}</Text>
-              <Text style={styles.offerExpiry}>
-                Valid till:{" "}
-                {new Date(item.validTill).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </Text>
-              {item.tnc && (
-                <Text
-                  style={styles.offerLink}
-                  onPress={() => Linking.openURL(item.tnc)}
-                >
-                  View Details →
-                </Text>
-              )}
-            </View>
-          ))}
-        </ScrollView>
-      )}
+            )}
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
