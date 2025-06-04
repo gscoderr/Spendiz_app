@@ -5,12 +5,13 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  Linking,
   TouchableOpacity,
   ScrollView,
+  Modal,
 } from "react-native";
 import api from "../../utils/axiosInstance";
-import { normalizeBankName } from "../../utils/bankSynonymMap";
+import { normalizeBankName } from "../../utils/bankSynonymMap.js";
+import {OfferDetails} from "./offerDetails.jsx" // ✅ import your details component
 
 export default function OfferList({
   title = "🔥 Offers",
@@ -23,16 +24,13 @@ export default function OfferList({
   const [showMatched, setShowMatched] = useState(true);
   const [userCards, setUserCards] = useState([]);
 
+  const [selectedOfferId, setSelectedOfferId] = useState(null); // ✅ new
+  const [showModal, setShowModal] = useState(false); // ✅ new
+
   const fetchUserCards = async () => {
     try {
       const res = await api.get("/cards/user");
       const cards = res.data.data || [];
-
-      console.log("👤 User Cards:");
-      cards.forEach((card) => {
-        const normBank = normalizeBankName(card.bank);
-        console.log(`- ${card.bank} (${normBank}) | ${card.cardName}`);
-      });
 
       setUserCards(cards);
       return cards;
@@ -44,9 +42,7 @@ export default function OfferList({
 
   const fetchMatchedOffers = async (cards = userCards) => {
     setLoading(true);
-
     if (!cards || cards.length === 0) {
-      console.warn("⚠️ No cards to match. Skipping matched offers.");
       setOffers([]);
       setLoading(false);
       return;
@@ -59,105 +55,59 @@ export default function OfferList({
         subCategory,
       });
 
-      const matchedOffers = res.data.data || [];
-
-      console.log("🎯 Matched Offers:");
-      matchedOffers.forEach((offer) => {
-        console.log(
-          `➡️ ${offer.bank} | ${offer.cardNames?.join(", ") || "All Cards"}`
-        );
-      });
-
-      setOffers(matchedOffers);
+      setOffers(res.data.data || []);
     } catch (error) {
-      console.error("❌ Error fetching matched offers:", error.response?.data || error.message);
+      console.error("❌ Error fetching matched offers:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-const fetchAllOffers = async () => {
-  setLoading(true);
-  try {
-    // Step 1: Fetch user cards
-    const resCards = await api.get("/cards/user");
-    const userCards = resCards.data.data || [];
+  const fetchAllOffers = async () => {
+    setLoading(true);
+    try {
+      const resCards = await api.get("/cards/user");
+      const userCards = resCards.data.data || [];
 
-    // Group user cards by normalized bank
-    const userCardMap = {};
-    userCards.forEach((card) => {
-      const bankKey = normalizeBankName(card.bank);
-      const cardName = card.cardName?.trim();
-      if (!bankKey || !cardName) return;
+      const userCardMap = {};
+      userCards.forEach((card) => {
+        const bankKey = normalizeBankName(card.bank);
+        const cardName = card.cardName?.trim();
+        if (!bankKey || !cardName) return;
+        if (!userCardMap[bankKey]) userCardMap[bankKey] = new Set();
+        userCardMap[bankKey].add(cardName);
+      });
 
-      if (!userCardMap[bankKey]) userCardMap[bankKey] = new Set();
-      userCardMap[bankKey].add(cardName);
-    });
+      const res = await api.get(`/offers/all`);
+      const allOffers = res.data.data || [];
 
-    // 🔍 Log grouped user cards
-    console.log("👤 User Cards Grouped:");
-    Object.entries(userCardMap).forEach(([bank, names]) => {
-      console.log(`- ${bank}: ${Array.from(names).join(", ")}`);
-    });
-
-    // Step 2: Fetch all platform offers
-    // const res = await api.get(`/offers/${platform}`);
-    const res = await api.get(`/offers/all`);
-
-    const allOffers = res.data.data || [];
-    console.log(`🌐 Total Offers from ${platform}:`, allOffers.length);
-
-    // ✅ Step 3: Filter offers by bank
-    const bankFiltered = allOffers.filter((offer) => {
-      const bank = normalizeBankName(offer.bank);
-      return !!userCardMap[bank]; // Keep offers from banks the user has cards for
-    });
-
-    console.log(`🏦 Bank-Filtered Offers: ${bankFiltered.length}`);
-
-    // ✅ Step 4: Now do cardName filtering
-    const finalOffers = bankFiltered.filter((offer) => {
-      const offerBank = normalizeBankName(offer.bank);
-      const offerCardNames = offer.cardNames || [];
-      const userCardNames = userCardMap[offerBank];
-
-      if (!userCardNames) return false; // safety
-
-      if (!Array.isArray(offerCardNames) || offerCardNames.length === 0) {
-        console.log(`✅ Matched (All Cards): ${offer.bank} → ${offer.title}`);
-        return true;
-      }
-
-      const isMatched = Array.from(userCardNames).some((userCardName) =>
-        offerCardNames.includes(userCardName)
+      const bankFiltered = allOffers.filter((offer) =>
+        userCardMap[normalizeBankName(offer.bank)]
       );
 
-      if (isMatched) {
-        console.log(`✅ Matched: ${offer.bank} | ${offerCardNames.join(", ")} ← user has ${Array.from(userCardNames).join(", ")}`);
-      } else {
-        console.log(`❌ Skipped (CardName mismatch): ${offer.bank} | ${offerCardNames.join(", ")} ← user has ${Array.from(userCardNames).join(", ")}`);
-      }
+      const finalOffers = bankFiltered.filter((offer) => {
+        const offerBank = normalizeBankName(offer.bank);
+        const offerCardNames = offer.cardNames || [];
+        const userCardNames = userCardMap[offerBank];
 
-      return isMatched;
-    });
+        if (!userCardNames) return false;
 
-    // ✅ Final Logs
-    const matchedBanks = [...new Set(finalOffers.map((o) => normalizeBankName(o.bank)))];
-    console.log("🎯 Final Matched Banks:", matchedBanks);
-    console.log("📦 Total Filtered Offers:", finalOffers.length);
-    console.log("📡 View All Offers Route Hit");
-console.log(`👤 Total User Cards: ${userCards.length}`);
-console.log(`🛍️ All Offers Received: ${allOffers.length}`);
+        if (!Array.isArray(offerCardNames) || offerCardNames.length === 0) {
+          return true;
+        }
 
-    setOffers(finalOffers);
-  } catch (error) {
-    console.error("❌ Error in fetchAllOffers:", error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+        return Array.from(userCardNames).some((userCardName) =>
+          offerCardNames.includes(userCardName)
+        );
+      });
 
-
+      setOffers(finalOffers);
+    } catch (error) {
+      console.error("❌ Error in fetchAllOffers:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleView = () => {
     const next = !showMatched;
@@ -165,19 +115,21 @@ console.log(`🛍️ All Offers Received: ${allOffers.length}`);
     next ? fetchMatchedOffers() : fetchAllOffers();
   };
 
+  const handleOpenModal = (offerId) => {
+    setSelectedOfferId(offerId);
+    setShowModal(true);
+  };
+
   useEffect(() => {
     const init = async () => {
       const cards = await fetchUserCards();
       if (cards.length > 0) {
-        console.log("🎯 Matched offers will be shown first");
         fetchMatchedOffers(cards);
       } else {
-        console.warn("🟡 No cards found. Loading all offers instead.");
         setShowMatched(false);
         fetchAllOffers();
       }
     };
-
     init();
   }, []);
 
@@ -206,50 +158,45 @@ console.log(`🛍️ All Offers Received: ${allOffers.length}`);
         </TouchableOpacity>
       </View>
 
-      {loading && (
-        <ActivityIndicator size="large" color="#3D5CFF" style={{ marginTop: 24 }} />
-      )}
+      <ScrollView contentContainerStyle={styles.grid}>
+        {offers.map((item) => (
+          <View key={item._id} style={styles.offerCard}>
+            <Image
+              source={{ uri: item.image || require("../../assets/banks/sbi.png") }}
+              style={styles.offerImage}
+              resizeMode="cover"
+            />
+            <Text style={styles.offerTitle}>{item.title}</Text>
+            <Text style={styles.offerBenefit} numberOfLines={2}>
+              {item.benefit || "Special offer available!"}
+            </Text>
+            <Text style={styles.offerBank}>{item.bank}</Text>
+            <Text style={styles.offerExpiry}>
+              Valid till:{" "}
+              {new Date(item.validTill).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </Text>
 
-      {!loading && offers.length === 0 && (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          {showMatched ? "No matched offers." : "No offers available."}
-        </Text>
-      )}
+            {/* ✅ View Details inside modal */}
+            <TouchableOpacity onPress={() => handleOpenModal(item._id)}>
+              <Text style={styles.offerLink}>View Details →</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
 
-      {!loading && offers.length > 0 && (
-        <ScrollView contentContainerStyle={styles.grid}>
-          {offers.map((item) => (
-            <View key={item._id} style={styles.offerCard}>
-              <Image
-                source={{ uri: item.image || require("../../assets/banks/sbi.png") }}
-                style={styles.offerImage}
-                resizeMode="cover"
-              />
-              <Text style={styles.offerTitle}>{item.title}</Text>
-              <Text style={styles.offerBenefit} numberOfLines={2} ellipsizeMode="tail">
-                {item.benefit || "Special offer available!"}
-              </Text>
-              <Text style={styles.offerBank}>{item.bank}</Text>
-              <Text style={styles.offerExpiry}>
-                Valid till:{" "}
-                {new Date(item.validTill).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </Text>
-              {item.tnc && (
-                <Text
-                  style={styles.offerLink}
-                  onPress={() => Linking.openURL(item.tnc)}
-                >
-                  View Details →
-                </Text>
-              )}
-            </View>
-          ))}
+      {/* ✅ Offer Modal */}
+      <Modal visible={showModal} animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <ScrollView style={{ padding: 16, backgroundColor: "#fff" }}>
+          <TouchableOpacity onPress={() => setShowModal(false)} style={{ marginBottom: 12 }}>
+            <Text style={{ color: "#3D5CFF", fontWeight: "bold" }}>← Close</Text>
+          </TouchableOpacity>
+          {selectedOfferId && <OfferDetails offerId={selectedOfferId} />}
         </ScrollView>
-      )}
+      </Modal>
     </View>
   );
 }

@@ -1,9 +1,14 @@
+// 📁 controllers/offer.controller.js
+
 import Offer from "../models/offer.model.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
-// ✅ Updated Strict Match: also supports bank: 'Various' and cardNames: []
+/**
+ * 🔍 Match offers strictly using user's card data (bank + cardName)
+ * Supports fallback when cardNames are empty
+ */
 export const getMatchingOffers = asyncHandler(async (req, res) => {
   const { cards = [], category, subCategory } = req.body;
 
@@ -13,62 +18,61 @@ export const getMatchingOffers = asyncHandler(async (req, res) => {
 
   const today = new Date();
 
-  // 📋 Show all received user cards
+  // 👀 Debug: List all user cards
   console.log("👤 Received User Cards for Matching:");
   cards.forEach((card) => {
     console.log(`- ${card.bank} | ${card.cardName}`);
   });
 
-  const conditions = cards.map((card) => {
-    if (!card.bank || !card.cardName) return null;
+  // 🧠 Build MongoDB conditions
+  const conditions = cards
+    .map((card) => {
+      if (!card.bank || !card.cardName) return null;
 
-    return {
-      $and: [
-        {
-          bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") },
-        },
-        {
-          $or: [
-            { cardNames: { $elemMatch: { $regex: new RegExp(`^${card.cardName.trim()}$`, "i") } } },
-            { cardNames: { $exists: false } },
-            { cardNames: { $size: 0 } },
-          ],
-        },
-        ...(category ? [{ category }] : []),
-        ...(subCategory ? [{ subCategory }] : []),
-        { validTill: { $gte: today } },
-      ],
-    };
-  }).filter(Boolean);
+      return {
+        $and: [
+          { bank: { $regex: new RegExp(`^${card.bank.trim()}$`, "i") } },
+          {
+            $or: [
+              { cardNames: { $elemMatch: { $regex: new RegExp(`^${card.cardName.trim()}$`, "i") } } },
+              { cardNames: { $exists: false } },
+              { cardNames: { $size: 0 } },
+            ],
+          },
+          ...(category ? [{ category }] : []),
+          ...(subCategory ? [{ subCategory }] : []),
+          { validTill: { $gte: today } },
+        ],
+      };
+    })
+    .filter(Boolean);
 
   if (!conditions.length) {
     throw new ApiError(400, "Valid card data required");
   }
 
-  // 🧠 Debug log for conditions
   console.log("🔍 MongoDB Conditions:");
   console.dir(conditions, { depth: null });
 
-  // ✅ Match offers using OR of all conditions
- const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
+  const offers = await Offer.find({ $or: conditions }).sort({ validTill: 1 });
 
-// ✅ Log: Total and Unique Banks
-const bankList = offers.map((o) => o.bank?.trim()).filter(Boolean);
-const uniqueBanks = [...new Set(bankList)];
+  // 📊 Debug: Offer summary
+  const uniqueBanks = [...new Set(offers.map((o) => o.bank?.trim()).filter(Boolean))];
 
-console.log("✅ Total Matched Offers:", offers.length);
-console.log("🏦 Banks in Offers:", uniqueBanks);
+  console.log("✅ Total Matched Offers:", offers.length);
+  console.log("🏦 Banks in Offers:", uniqueBanks);
 
-offers.forEach((offer) => {
-  const cards = offer.cardNames?.length > 0 ? offer.cardNames.join(", ") : "All Cards";
-  console.log(`➡️ ${offer.bank} | ${cards}`);
-});
-
+  offers.forEach((offer) => {
+    const cards = offer.cardNames?.length > 0 ? offer.cardNames.join(", ") : "All Cards";
+    console.log(`➡️ ${offer.bank} | ${cards}`);
+  });
 
   res.status(200).json(new ApiResponse(200, offers, "Strict-matched offers fetched"));
 });
 
-// ✅ Get all SmartBuy offers
+/**
+ * 🔁 Get all SmartBuy offers
+ */
 export const getSmartBuyOffers = asyncHandler(async (req, res) => {
   const today = new Date();
 
@@ -80,22 +84,34 @@ export const getSmartBuyOffers = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, offers, "SmartBuy offers fetched"));
 });
 
-// ✅ Get all EaseMyTrip offers
-export const getEaseMyTripOffers = async (req, res) => {
-  try {
-    const offers = await Offer.find({ source: "EaseMyTrip" }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: offers });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+/**
+ * ✈️ Get all EaseMyTrip offers
+ */
+export const getEaseMyTripOffers = asyncHandler(async (req, res) => {
+  const offers = await Offer.find({ source: "EaseMyTrip" }).sort({ createdAt: -1 });
+  res.status(200).json(new ApiResponse(200, offers, "EaseMyTrip offers fetched"));
+});
 
-// ✅ NEW: Get all offers (SmartBuy + EMT + ICICI + more)
+/**
+ * 🧾 Get all valid offers (any source, future-valid only)
+ */
 export const getAllOffers = asyncHandler(async (req, res) => {
   const today = new Date();
+
   const offers = await Offer.find({
     validTill: { $gte: today },
   }).sort({ scrapedAt: -1 });
 
   res.status(200).json(new ApiResponse(200, offers, "All offers fetched"));
+});
+
+/**
+ * 🧱 NEW: Get single offer by ID (for View Details)
+ */
+export const getOfferById = asyncHandler(async (req, res) => {
+  const offer = await Offer.findById(req.params.id);
+
+  if (!offer) throw new ApiError(404, "Offer not found");
+
+  res.status(200).json(new ApiResponse(200, offer, "Offer details fetched"));
 });
