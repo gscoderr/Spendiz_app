@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import api from "../../utils/axiosInstance";
 import { normalizeBankName } from "../../utils/bankSynonymMap.js";
-import {OfferDetails} from "./offerDetails.jsx" // ✅ import your details component
+import OfferDetails from "./offerDetails.jsx";
 
 export default function OfferList({
   title = "🔥 Offers",
