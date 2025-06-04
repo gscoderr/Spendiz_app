@@ -20,6 +20,7 @@ import matchRoutes from "./routes/match.route.js";
 import travelRoutes from "./routes/travel.route.js";
 import offersRoutes from "./routes/offer.route.js";
 import scraperRoutes from "./routes/scraper.route.js";
+import dynamicRoutes from "./routes/dynamic.route.js";
 
 
 // Route declarations
@@ -29,6 +30,7 @@ app.use("/api/v1/match",matchRoutes);
 app.use("/api/v1/travel", travelRoutes);
 app.use("/api/v1/offers", offersRoutes);
 app.use("/api/v1/scraper", scraperRoutes);
+app.use("/api/dynamic", dynamicRoutes);
 
 
 

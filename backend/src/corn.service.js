@@ -2,7 +2,7 @@ import cron from "node-cron";
 import scrapeEasyMyTripOffers from "./scraper/easyMyTrip.scraper.js";
 
 cron.schedule("0 */12 * * *", async () => {
-// cron.schedule("*/1 * * * *", async () => {
+  // cron.schedule("*/1 * * * *", async () => {
   console.log("🟡 CRON TRIGGERED: Running EaseMyTrip Scraper...");
 
   try {
@@ -13,8 +13,9 @@ cron.schedule("0 */12 * * *", async () => {
   }
 });
 
-// ICICI Bank Offers Scraper — Runs daily at 1:00 AM
+// ICICI Bank Offers Scraper — Runs daily at 1:00 AM   scraping me or dekhna hoga only offers ke details icici me huwa tha baki duse mai
 cron.schedule("0 1 * * *", async () => {
+// cron.schedule("*/1 * * * *", async () => {
   console.log("🟢 CRON: Running ICICI Bank Scraper...");
   try {
     await scrapeICICIOffers();
@@ -26,6 +27,7 @@ cron.schedule("0 1 * * *", async () => {
 
 // HDFC SmartBuy Scraper — Runs daily at 2:00 AM
 cron.schedule("0 2 * * *", async () => {
+  // cron.schedule("*/1 * * * *", async () => {
   console.log("🔵 CRON: Running SmartBuy Scraper...");
   try {
     await scrapeSmartBuyOffers();

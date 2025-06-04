@@ -18,7 +18,7 @@ export const bankSynonymMap = {
   "BOI": ["BOI", "Bank of India"],
   "CANARA": ["CANARA", "Canara Bank"],
   "UNION": ["UNION", "Union Bank of India"],
-  "PNB": ["PNB", "Punjab National Bank"],
+  "PNB": ["PNB", "Punjab National Bank"], 
   "INDIAN": ["INDIAN", "Indian Bank"],
   "UCO": ["UCO", "UCO Bank"],
   "CENTRAL": ["CENTRAL", "Central Bank of India"],
