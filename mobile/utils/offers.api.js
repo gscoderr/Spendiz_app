@@ -8,7 +8,7 @@ export const fetchMatchingOffers = async ({ cards, category, subCategory }) => {
       subCategory,
     });
 
-    console.log("📦 Offers fetched from backend:", res.data.data); // ✅ confirm hit
+    
     return res.data.data || [];
   } catch (error) {
     console.error("❌ Error fetching offers:", error.response?.data || error.message);
