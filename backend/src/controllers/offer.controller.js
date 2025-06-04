@@ -89,3 +89,13 @@ export const getEaseMyTripOffers = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ✅ NEW: Get all offers (SmartBuy + EMT + ICICI + more)
+export const getAllOffers = asyncHandler(async (req, res) => {
+  const today = new Date();
+  const offers = await Offer.find({
+    validTill: { $gte: today },
+  }).sort({ scrapedAt: -1 });
+
+  res.status(200).json(new ApiResponse(200, offers, "All offers fetched"));
+});

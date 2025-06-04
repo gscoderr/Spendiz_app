@@ -14,7 +14,7 @@ import { normalizeBankName } from "../../utils/bankSynonymMap";
 
 export default function OfferList({
   title = "🔥 Offers",
-  platform = "easemytrip",
+  platform = "all",
   category = "Travel",
   subCategory = "Flights",
 }) {
@@ -101,7 +101,9 @@ const fetchAllOffers = async () => {
     });
 
     // Step 2: Fetch all platform offers
-    const res = await api.get(`/offers/${platform}`);
+    // const res = await api.get(`/offers/${platform}`);
+    const res = await api.get(`/offers/all`);
+
     const allOffers = res.data.data || [];
     console.log(`🌐 Total Offers from ${platform}:`, allOffers.length);
 
@@ -143,6 +145,9 @@ const fetchAllOffers = async () => {
     const matchedBanks = [...new Set(finalOffers.map((o) => normalizeBankName(o.bank)))];
     console.log("🎯 Final Matched Banks:", matchedBanks);
     console.log("📦 Total Filtered Offers:", finalOffers.length);
+    console.log("📡 View All Offers Route Hit");
+console.log(`👤 Total User Cards: ${userCards.length}`);
+console.log(`🛍️ All Offers Received: ${allOffers.length}`);
 
     setOffers(finalOffers);
   } catch (error) {

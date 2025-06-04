@@ -4,6 +4,7 @@ import { getCombinedOffers } from "../controllers/combined.controller.js";
 import { getSmartBuyOffers, getEaseMyTripOffers } from "../controllers/offer.controller.js";
 import { getMatchingOffers } from "../controllers/offer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { getAllOffers } from "../controllers/offer.controller.js";
 
 const router = express.Router();
 
@@ -13,5 +14,8 @@ router.post("/matching", verifyJWT, getMatchingOffers);
 
 // ✅ NEW route to get merged offers
 router.post("/combined", verifyJWT, getCombinedOffers);
+
+
+router.get("/all", getAllOffers);
 
 export default router;
