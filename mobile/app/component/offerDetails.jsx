@@ -1,54 +1,61 @@
-// 📁 app/components/OfferDetails.jsx
-
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
 import api from "../../utils/axiosInstance.js";
 
-// Recursive Renderer for domTree
+// 🧠 Recursive Renderer for domTree
 const renderDomTree = (node) => {
   if (!node || typeof node !== "object") return null;
 
   const style = styles[node.tag] || styles.default;
 
-  if (node.tag === "ul" && Array.isArray(node.items)) {
-    return (
-      <View style={styles.list}>
-        {node.items.map((item, idx) => (
-          <Text key={idx} style={styles.listItem}>• {item}</Text>
-        ))}
-      </View>
-    );
+  if (!styles[node.tag]) {
+    console.warn("⚠️ Unknown tag received in domTree:", node.tag);
   }
 
-  if (node.tag === "table" && Array.isArray(node.rows)) {
-    return (
-      <View style={styles.table}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.th}>Category</Text>
-          <Text style={styles.th}>Code</Text>
-          <Text style={styles.th}>Details</Text>
-          <Text style={styles.th}>Cards</Text>
+  try {
+    if (node.tag === "ul" && Array.isArray(node.items)) {
+      return (
+        <View style={styles.list}>
+          {node.items.map((item, idx) => (
+            <Text key={idx} style={styles.listItem}>• {item}</Text>
+          ))}
         </View>
-        {node.rows.map((row, idx) => (
-          <View key={idx} style={styles.tableRow}>
-            <Text style={styles.td}>{row.category}</Text>
-            <Text style={styles.td}>{row.offerCode}</Text>
-            <Text style={styles.td}>{row.offerDetails}</Text>
-            <Text style={styles.td}>{row.applicableCards}</Text>
+      );
+    }
+
+    if (node.tag === "table" && Array.isArray(node.rows)) {
+      return (
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.th}>Category</Text>
+            <Text style={styles.th}>Code</Text>
+            <Text style={styles.th}>Details</Text>
+            <Text style={styles.th}>Cards</Text>
           </View>
+          {node.rows.map((row, idx) => (
+            <View key={idx} style={styles.tableRow}>
+              <Text style={styles.td}>{row?.category || "-"}</Text>
+              <Text style={styles.td}>{row?.offerCode || "-"}</Text>
+              <Text style={styles.td}>{row?.offerDetails || "-"}</Text>
+              <Text style={styles.td}>{row?.applicableCards || "-"}</Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    return (
+      <View style={style}>
+        {!!node.text && <Text style={styles.text}>{node.text}</Text>}
+        {Array.isArray(node.children) && node.children.map((child, idx) => (
+          <View key={idx}>{renderDomTree(child)}</View>
         ))}
       </View>
     );
+  } catch (err) {
+    console.warn("⚠️ Error rendering domTree node:", err.message);
+    return null;
   }
-
-  return (
-    <View style={style}>
-      {node.text && <Text style={styles.text}>{node.text}</Text>}
-      {node.children?.map((child, idx) => (
-        <View key={idx}>{renderDomTree(child)}</View>
-      ))}
-    </View>
-  );
 };
 
 export default function OfferDetails({ offerId }) {
@@ -70,22 +77,30 @@ export default function OfferDetails({ offerId }) {
     if (offerId) fetchOffer();
   }, [offerId]);
 
-  if (loading) return <ActivityIndicator size="large" color="#000" style={{ marginTop: 30 }} />;
+  if (loading) {
+    return <ActivityIndicator size="large" color="#000" style={{ marginTop: 30 }} />;
+  }
 
-  if (!offer) return <Text style={{ marginTop: 30, color: "red" }}>Offer not found.</Text>;
+  if (!offer) {
+    return <Text style={{ marginTop: 30, color: "red" }}>Offer not found.</Text>;
+  }
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{offer.title}</Text>
       <Text style={styles.subtext}>{offer.bank} — {offer.category}</Text>
       <Text style={styles.validity}>
-        Valid Till: {new Date(offer.validTill).toLocaleDateString()}
+        Valid Till: {new Date(offer.validTill).toLocaleDateString("en-IN")}
       </Text>
 
-      {/* 🔍 Render domTree */}
-      <View style={styles.section}>
-        {renderDomTree(offer.domTree)}
-      </View>
+      {/* 🔍 Dynamic Offer Body */}
+      {offer.domTree ? (
+        <View style={styles.section}>
+          {renderDomTree(offer.domTree)}
+        </View>
+      ) : (
+        <Text style={styles.noDetails}>No detailed breakdown available.</Text>
+      )}
     </ScrollView>
   );
 }
@@ -151,5 +166,11 @@ const styles = StyleSheet.create({
   },
   default: {
     marginVertical: 4
+  },
+  noDetails: {
+    fontSize: 13,
+    fontStyle: "italic",
+    color: "#888",
+    marginTop: 10
   }
 });

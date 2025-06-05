@@ -19,6 +19,7 @@ export default function CardBenefitsScreen() {
   const { userSavedCards } = useUser();
   const params = useLocalSearchParams();
   const [suggestions, setSuggestions] = useState([]);
+
   const { flightLink, flightAmount, from, to, date } = useLocalSearchParams();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function CardBenefitsScreen() {
     }
   }, []);
 
-  // 🐞 Debug
+  // 🐞 Debug Logs
   console.log("🟢 bestCards:", bestCards?.length);
   console.log("🟡 suggestions:", suggestions?.length);
   console.log("flight amount", flightAmount);
@@ -124,12 +125,7 @@ export default function CardBenefitsScreen() {
           <View style={[styles.offerCard, { backgroundColor: "#e8f8f5" }]}>
             <View style={styles.offerLeft}>
               <View>
-                <Text
-                  style={[
-                    styles.offerTitle,
-                    { fontSize: 16, color: "#1a5276" },
-                  ]}
-                >
+                <Text style={[styles.offerTitle, { fontSize: 16, color: "#1a5276" }]}>
                   Flight Booking Available
                 </Text>
                 <Text style={[styles.offerDescription, { color: "#1a5276" }]}>
@@ -139,19 +135,14 @@ export default function CardBenefitsScreen() {
               </View>
             </View>
             <TouchableOpacity onPress={() => Linking.openURL(flightLink)}>
-              <Text style={[styles.redeemBtn, { color: "#0e6655" }]}>
-                Book Now →
-              </Text>
+              <Text style={[styles.redeemBtn, { color: "#0e6655" }]}>Book Now →</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {suggestions.length > 0 && (
           <View>
-            <Text style={styles.sectionTitle}>
-              💡 Other Offers You May Like
-            </Text>
-
+            <Text style={styles.sectionTitle}>💡 Other Offers You May Like</Text>
             {suggestions.map((offer, index) => {
               const brand = Array.isArray(offer.coPartnerBrands)
                 ? offer.coPartnerBrands.join(", ")
@@ -165,9 +156,10 @@ export default function CardBenefitsScreen() {
                 <View key={index} style={styles.offerCard}>
                   <View style={styles.offerLeft}>
                     <View style={styles.circleLogo} />
-                    <Text style={styles.offerDescription}>
-                      {card.benefitDetails || "Benefit details not available"}
-                    </Text>
+                    <View>
+                      <Text style={styles.offerTitle}>{brand}</Text>
+                      <Text style={styles.offerDescription}>{benefitText}</Text>
+                    </View>
                   </View>
                   <TouchableOpacity>
                     <Text style={styles.redeemBtn}>View</Text>
@@ -181,8 +173,6 @@ export default function CardBenefitsScreen() {
     </SafeAreaView>
   );
 }
-
-//run karwao 
 
 const styles = StyleSheet.create({
   safe: {
